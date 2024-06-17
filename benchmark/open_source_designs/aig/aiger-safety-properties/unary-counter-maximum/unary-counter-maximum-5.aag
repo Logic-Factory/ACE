@@ -1,0 +1,22 @@
+aag 6 0 5 1 1
+2 1
+4 2
+6 4
+8 6
+10 8
+12
+12 8 11
+l0 true_after_0
+l1 true_after_1
+l2 true_after_2
+l3 true_after_3
+l4 true_after_4
+o0 counter_value_is_5
+c
+--------------------------------------------------------------------------------
+This circuit is a unary counter that counts up to 5. The output bit is set to 1
+when the counter reaches its maximum value, that is, during iteration 4.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

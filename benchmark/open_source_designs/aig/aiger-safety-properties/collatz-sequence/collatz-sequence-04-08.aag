@@ -1,0 +1,151 @@
+aag 118 4 8 1 106
+2
+4
+6
+8
+10 207
+12 213
+14 219
+16 225
+18 226
+20 228
+22 230
+24 232
+236
+26 13 15
+28 17 19
+30 21 23
+32 26 28
+34 25 30
+36 32 34
+38 11 12
+40 10 13
+42 39 41
+44 10 12
+46 11 43
+48 10 42
+50 47 49
+52 10 43
+54 45 53
+56 13 14
+58 12 15
+60 57 59
+62 12 14
+64 54 61
+66 55 60
+68 65 67
+70 55 61
+72 63 71
+74 15 16
+76 14 17
+78 75 77
+80 14 16
+82 72 79
+84 73 78
+86 83 85
+88 73 79
+90 81 89
+92 17 18
+94 16 19
+96 93 95
+98 16 18
+100 90 97
+102 91 96
+104 101 103
+106 91 97
+108 99 107
+110 19 20
+112 18 21
+114 111 113
+116 18 20
+118 108 115
+120 109 114
+122 119 121
+124 109 115
+126 117 125
+128 21 22
+130 20 23
+132 129 131
+134 20 22
+136 126 133
+138 127 132
+140 137 139
+142 127 133
+144 135 143
+146 23 24
+148 22 25
+150 147 149
+152 22 24
+154 144 151
+156 145 150
+158 155 157
+160 145 151
+162 153 161
+164 10 51
+166 11 14
+168 165 167
+170 10 69
+172 11 16
+174 171 173
+176 10 87
+178 11 18
+180 177 179
+182 10 105
+184 11 20
+186 183 185
+188 10 123
+190 11 22
+192 189 191
+194 10 141
+196 11 24
+198 195 197
+200 10 159
+202 2 36
+204 37 38
+206 203 205
+208 4 36
+210 37 169
+212 209 211
+214 6 36
+216 37 175
+218 215 217
+220 8 36
+222 37 181
+224 221 223
+226 37 187
+228 37 193
+230 37 199
+232 37 200
+234 25 162
+236 10 235
+i0 input_bit_0
+i1 input_bit_1
+i2 input_bit_2
+i3 input_bit_3
+l0 state_bit_0
+l1 state_bit_1
+l2 state_bit_2
+l3 state_bit_3
+l4 state_bit_4
+l5 state_bit_5
+l6 state_bit_6
+l7 state_bit_7
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit takes a 4-bit integer and then proceeds to compute the Collatz
+sequence starting at the given number. Once it reaches 1, it again copies the 4
+input bits and begins computing the new Collatz sequence. During the calculation
+of each sequence, any change in the input bits is ignored.
+---
+While the input consists of 4 bits only, internally, the circuit uses 8-bit
+arithmetic. The single output bit will be set to 1 whenever an overflow occurs
+in the calculation of the Collatz sequence (and will reset to 0 immediately
+afterwards).
+---
+No such overflow can occur. The maximum trajectory point is 160, which is less
+than 256.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

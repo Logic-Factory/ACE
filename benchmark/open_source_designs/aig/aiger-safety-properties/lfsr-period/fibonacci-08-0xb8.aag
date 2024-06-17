@@ -1,0 +1,183 @@
+aag 133 8 17 1 108
+2
+4
+6
+8
+10
+12
+14
+16
+18 189
+20 195
+22 201
+24 207
+26 213
+28 219
+30 225
+32 231
+34 235
+36 239
+38 243
+40 247
+42 251
+44 255
+46 259
+48 263
+50 264
+267
+52 25 32
+54 24 33
+56 53 55
+58 27 57
+60 26 56
+62 59 61
+64 29 63
+66 28 62
+68 65 67
+70 3 5
+72 7 9
+74 11 13
+76 15 17
+78 70 72
+80 74 76
+82 78 80
+84 35 37
+86 39 41
+88 43 45
+90 47 49
+92 84 86
+94 88 90
+96 92 94
+98 34 69
+100 35 68
+102 99 101
+104 18 36
+106 19 37
+108 105 107
+110 20 38
+112 21 39
+114 111 113
+116 22 40
+118 23 41
+120 117 119
+122 24 42
+124 25 43
+126 123 125
+128 26 44
+130 27 45
+132 129 131
+134 28 46
+136 29 47
+138 135 137
+140 30 48
+142 31 49
+144 141 143
+146 103 109
+148 115 121
+150 127 133
+152 139 145
+154 146 148
+156 150 152
+158 154 156
+160 97 158
+162 50 160
+164 82 162
+166 19 68
+168 21 23
+170 25 27
+172 29 31
+174 166 168
+176 170 172
+178 174 176
+180 97 178
+182 82 161
+184 2 83
+186 69 82
+188 185 187
+190 4 83
+192 18 82
+194 191 193
+196 6 83
+198 20 82
+200 197 199
+202 8 83
+204 22 82
+206 203 205
+208 10 83
+210 24 82
+212 209 211
+214 12 83
+216 26 82
+218 215 217
+220 14 83
+222 28 82
+224 221 223
+226 16 83
+228 30 82
+230 227 229
+232 34 82
+234 185 233
+236 36 82
+238 191 237
+240 38 82
+242 197 241
+244 40 82
+246 203 245
+248 42 82
+250 209 249
+252 44 82
+254 215 253
+256 46 82
+258 221 257
+260 48 82
+262 227 261
+264 51 182
+266 165 181
+i0 input_0
+i1 input_1
+i2 input_2
+i3 input_3
+i4 input_4
+i5 input_5
+i6 input_6
+i7 input_7
+l0 register_bit_0
+l1 register_bit_1
+l2 register_bit_2
+l3 register_bit_3
+l4 register_bit_4
+l5 register_bit_5
+l6 register_bit_6
+l7 register_bit_7
+l8 copy_bit_0
+l9 copy_bit_1
+l10 copy_bit_2
+l11 copy_bit_3
+l12 copy_bit_4
+l13 copy_bit_5
+l14 copy_bit_6
+l15 copy_bit_7
+l16 counter_bit_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit computes the period (modulo 2) of a Fibonacci linear feedback shift
+register with 8 bits and taps 0xB8, corresponding to the feedback polynomial
+x^8 + x^6 + x^5 + x^4 + 1 with period 255.
+---
+The circuit has 8 input bits. If any of them are set, the computation is
+(re)started: the value of the input bits is copied into the 8-bit LFSR and into
+a second 8-bit register that acts as an immutable copy of the initial value.
+Otherwise, the register performs its regular operation and increments the period
+(modulo 2) in each step. Once the register value reaches the initial value,
+which is stored in the second register, the period is reset to zero. Setting any
+input to one starts a new computation.
+---
+The output bit is set if one of the following conditions is true, neither of
+which is possible:
+* the register value becomes zero during its regular operation, or
+* the register value reaches the initial value again, but the period is even.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

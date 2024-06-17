@@ -1,0 +1,357 @@
+aag 277 18 37 1 222
+2
+4
+6
+8
+10
+12
+14
+16
+18
+20
+22
+24
+26
+28
+30
+32
+34
+36
+38 377
+40 383
+42 389
+44 395
+46 401
+48 407
+50 413
+52 419
+54 425
+56 431
+58 437
+60 443
+62 449
+64 455
+66 461
+68 467
+70 473
+72 479
+74 483
+76 487
+78 491
+80 495
+82 499
+84 503
+86 507
+88 511
+90 515
+92 519
+94 523
+96 527
+98 531
+100 535
+102 539
+104 543
+106 547
+108 551
+110 552
+555
+112 59 72
+114 58 73
+116 113 115
+118 3 5
+120 7 9
+122 11 13
+124 15 17
+126 19 21
+128 23 25
+130 27 29
+132 31 33
+134 35 37
+136 118 120
+138 122 124
+140 126 128
+142 130 132
+144 136 138
+146 140 142
+148 144 146
+150 134 148
+152 75 77
+154 79 81
+156 83 85
+158 87 89
+160 91 93
+162 95 97
+164 99 101
+166 103 105
+168 107 109
+170 152 154
+172 156 158
+174 160 162
+176 164 166
+178 170 172
+180 174 176
+182 178 180
+184 168 182
+186 74 117
+188 75 116
+190 187 189
+192 38 76
+194 39 77
+196 193 195
+198 40 78
+200 41 79
+202 199 201
+204 42 80
+206 43 81
+208 205 207
+210 44 82
+212 45 83
+214 211 213
+216 46 84
+218 47 85
+220 217 219
+222 48 86
+224 49 87
+226 223 225
+228 50 88
+230 51 89
+232 229 231
+234 52 90
+236 53 91
+238 235 237
+240 54 92
+242 55 93
+244 241 243
+246 56 94
+248 57 95
+250 247 249
+252 58 96
+254 59 97
+256 253 255
+258 60 98
+260 61 99
+262 259 261
+264 62 100
+266 63 101
+268 265 267
+270 64 102
+272 65 103
+274 271 273
+276 66 104
+278 67 105
+280 277 279
+282 68 106
+284 69 107
+286 283 285
+288 70 108
+290 71 109
+292 289 291
+294 191 197
+296 203 209
+298 215 221
+300 227 233
+302 239 245
+304 251 257
+306 263 269
+308 275 281
+310 287 293
+312 294 296
+314 298 300
+316 302 304
+318 306 308
+320 312 314
+322 316 318
+324 320 322
+326 310 324
+328 185 326
+330 110 328
+332 150 330
+334 39 116
+336 41 43
+338 45 47
+340 49 51
+342 53 55
+344 57 59
+346 61 63
+348 65 67
+350 69 71
+352 334 336
+354 338 340
+356 342 344
+358 346 348
+360 352 354
+362 356 358
+364 360 362
+366 350 364
+368 185 366
+370 150 329
+372 2 151
+374 117 150
+376 373 375
+378 4 151
+380 38 150
+382 379 381
+384 6 151
+386 40 150
+388 385 387
+390 8 151
+392 42 150
+394 391 393
+396 10 151
+398 44 150
+400 397 399
+402 12 151
+404 46 150
+406 403 405
+408 14 151
+410 48 150
+412 409 411
+414 16 151
+416 50 150
+418 415 417
+420 18 151
+422 52 150
+424 421 423
+426 20 151
+428 54 150
+430 427 429
+432 22 151
+434 56 150
+436 433 435
+438 24 151
+440 58 150
+442 439 441
+444 26 151
+446 60 150
+448 445 447
+450 28 151
+452 62 150
+454 451 453
+456 30 151
+458 64 150
+460 457 459
+462 32 151
+464 66 150
+466 463 465
+468 34 151
+470 68 150
+472 469 471
+474 36 151
+476 70 150
+478 475 477
+480 74 150
+482 373 481
+484 76 150
+486 379 485
+488 78 150
+490 385 489
+492 80 150
+494 391 493
+496 82 150
+498 397 497
+500 84 150
+502 403 501
+504 86 150
+506 409 505
+508 88 150
+510 415 509
+512 90 150
+514 421 513
+516 92 150
+518 427 517
+520 94 150
+522 433 521
+524 96 150
+526 439 525
+528 98 150
+530 445 529
+532 100 150
+534 451 533
+536 102 150
+538 457 537
+540 104 150
+542 463 541
+544 106 150
+546 469 545
+548 108 150
+550 475 549
+552 111 370
+554 333 369
+i0 input_0
+i1 input_1
+i2 input_2
+i3 input_3
+i4 input_4
+i5 input_5
+i6 input_6
+i7 input_7
+i8 input_8
+i9 input_9
+i10 input_10
+i11 input_11
+i12 input_12
+i13 input_13
+i14 input_14
+i15 input_15
+i16 input_16
+i17 input_17
+l0 register_bit_0
+l1 register_bit_1
+l2 register_bit_2
+l3 register_bit_3
+l4 register_bit_4
+l5 register_bit_5
+l6 register_bit_6
+l7 register_bit_7
+l8 register_bit_8
+l9 register_bit_9
+l10 register_bit_10
+l11 register_bit_11
+l12 register_bit_12
+l13 register_bit_13
+l14 register_bit_14
+l15 register_bit_15
+l16 register_bit_16
+l17 register_bit_17
+l18 copy_bit_0
+l19 copy_bit_1
+l20 copy_bit_2
+l21 copy_bit_3
+l22 copy_bit_4
+l23 copy_bit_5
+l24 copy_bit_6
+l25 copy_bit_7
+l26 copy_bit_8
+l27 copy_bit_9
+l28 copy_bit_10
+l29 copy_bit_11
+l30 copy_bit_12
+l31 copy_bit_13
+l32 copy_bit_14
+l33 copy_bit_15
+l34 copy_bit_16
+l35 copy_bit_17
+l36 counter_bit_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit computes the period (modulo 2) of a Fibonacci linear feedback shift
+register with 18 bits and taps 0x20400, corresponding to the feedback polynomial
+x^18 + x^11 + 1 with period 262,143.
+---
+The circuit has 18 input bits. If any of them are set, the computation is
+(re)started: the value of the input bits is copied into the 18-bit LFSR and into
+a second 18-bit register that acts as an immutable copy of the initial value.
+Otherwise, the register performs its regular operation and increments the period
+(modulo 2) in each step. Once the register value reaches the initial value,
+which is stored in the second register, the period is reset to zero. Setting any
+input to one starts a new computation.
+---
+The output bit is set if one of the following conditions is true, neither of
+which is possible:
+* the register value becomes zero during its regular operation, or
+* the register value reaches the initial value again, but the period is even.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

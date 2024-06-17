@@ -1,0 +1,94 @@
+aag 64 0 11 1 53
+2 57
+4 65
+6 71
+8 9
+10 77
+12 85
+14 93
+16 101
+18 109
+20 117
+22 125
+128
+24 9 11
+26 13 15
+28 17 19
+30 21 23
+32 24 26
+34 28 30
+36 32 34
+38 3 5
+40 7 38
+42 2 5
+44 2 4
+46 3 4
+48 43 47
+50 41 48
+52 36 51
+54 2 37
+56 53 55
+58 7 43
+60 36 59
+62 4 37
+64 61 63
+66 36 44
+68 6 37
+70 67 69
+72 9 10
+74 8 11
+76 73 75
+78 8 10
+80 12 79
+82 13 78
+84 81 83
+86 12 78
+88 14 87
+90 15 86
+92 89 91
+94 14 86
+96 16 95
+98 17 94
+100 97 99
+102 16 94
+104 18 103
+106 19 102
+108 105 107
+110 18 102
+112 20 111
+114 21 110
+116 113 115
+118 20 110
+120 22 119
+122 23 118
+124 121 123
+126 22 118
+128 2 6
+l0 red
+l1 yellow
+l2 green
+l3 counter_bit_0
+l4 counter_bit_1
+l5 counter_bit_2
+l6 counter_bit_3
+l7 counter_bit_4
+l8 counter_bit_5
+l9 counter_bit_6
+l10 counter_bit_7
+o0 red_and_green
+c
+--------------------------------------------------------------------------------
+This circuit is a simple traffic light. Each of the three signals (red, yellow,
+green) is represented by one latch. The remaining 8 latches form a counter that
+acts as a timer: the traffic light only changes whenever the counter wraps
+around, that is, every 256 iterations.
+---
+The traffic light initializes itself such that the red signal is on. It then
+follows a standard cycle: red, red and yellow, green, yellow, red.
+---
+The output bit is set whenever both the red and the green signal are on at the
+same time, which never happens.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

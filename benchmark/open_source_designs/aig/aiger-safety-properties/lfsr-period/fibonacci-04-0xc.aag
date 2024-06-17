@@ -1,0 +1,105 @@
+aag 67 4 9 1 54
+2
+4
+6
+8
+10 97
+12 103
+14 109
+16 115
+18 119
+20 123
+22 127
+24 131
+26 132
+135
+28 15 16
+30 14 17
+32 29 31
+34 3 5
+36 7 9
+38 34 36
+40 19 21
+42 23 25
+44 40 42
+46 18 33
+48 19 32
+50 47 49
+52 10 20
+54 11 21
+56 53 55
+58 12 22
+60 13 23
+62 59 61
+64 14 24
+66 15 25
+68 65 67
+70 51 57
+72 63 69
+74 70 72
+76 45 74
+78 26 76
+80 38 78
+82 11 32
+84 13 15
+86 82 84
+88 45 86
+90 38 77
+92 2 39
+94 33 38
+96 93 95
+98 4 39
+100 10 38
+102 99 101
+104 6 39
+106 12 38
+108 105 107
+110 8 39
+112 14 38
+114 111 113
+116 18 38
+118 93 117
+120 20 38
+122 99 121
+124 22 38
+126 105 125
+128 24 38
+130 111 129
+132 27 90
+134 81 89
+i0 input_0
+i1 input_1
+i2 input_2
+i3 input_3
+l0 register_bit_0
+l1 register_bit_1
+l2 register_bit_2
+l3 register_bit_3
+l4 copy_bit_0
+l5 copy_bit_1
+l6 copy_bit_2
+l7 copy_bit_3
+l8 counter_bit_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit computes the period (modulo 2) of a Fibonacci linear feedback shift
+register with 4 bits and taps 0xC, corresponding to the feedback polynomial
+x^4 + x^3 + 1 with period 15.
+---
+The circuit has 4 input bits. If any of them are set, the computation is
+(re)started: the value of the input bits is copied into the 4-bit LFSR and into
+a second 4-bit register that acts as an immutable copy of the initial value.
+Otherwise, the register performs its regular operation and increments the period
+(modulo 2) in each step. Once the register value reaches the initial value,
+which is stored in the second register, the period is reset to zero. Setting any
+input to one starts a new computation.
+---
+The output bit is set if one of the following conditions is true, neither of
+which is possible:
+* the register value becomes zero during its regular operation, or
+* the register value reaches the initial value again, but the period is even.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

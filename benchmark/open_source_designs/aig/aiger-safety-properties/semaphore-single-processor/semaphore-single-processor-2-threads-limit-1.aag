@@ -1,0 +1,297 @@
+aag 244 4 14 1 226
+2
+4
+6
+8
+10 129
+12 49
+14 55
+16 153
+18 165
+20 205
+22 243
+24 279
+26 299
+28 337
+30 375
+32 411
+34 431
+36 463
+489
+38 2 17
+40 4 19
+42 39 40
+44 11 38
+46 10 12
+48 45 47
+50 11 42
+52 10 14
+54 51 53
+56 2 49
+58 4 55
+60 20 23
+62 25 27
+64 60 62
+66 21 23
+68 25 26
+70 66 68
+72 65 71
+74 56 73
+76 28 31
+78 33 35
+80 76 78
+82 29 31
+84 33 34
+86 82 84
+88 81 87
+90 58 89
+92 75 91
+94 21 22
+96 24 27
+98 94 96
+100 24 26
+102 60 100
+104 99 103
+106 56 105
+108 29 30
+110 32 35
+112 108 110
+114 32 34
+116 76 114
+118 113 117
+120 58 119
+122 107 121
+124 10 122
+126 92 124
+128 92 127
+130 17 18
+132 66 100
+134 56 132
+136 82 114
+138 58 136
+140 135 139
+142 60 96
+144 56 142
+146 16 141
+148 16 147
+150 145 148
+152 145 151
+154 76 110
+156 58 154
+158 130 141
+160 18 159
+162 157 160
+164 157 163
+166 17 19
+168 23 67
+170 24 66
+172 25 169
+174 171 173
+176 7 20
+178 20 177
+180 22 179
+182 6 21
+184 23 182
+186 95 185
+188 24 180
+190 25 187
+192 189 191
+194 26 175
+196 27 193
+198 195 197
+200 56 199
+202 20 57
+204 201 203
+206 20 166
+208 23 206
+210 95 209
+212 24 60
+214 25 211
+216 213 215
+218 22 181
+220 21 37
+222 22 220
+224 61 223
+226 24 219
+228 25 225
+230 227 229
+232 26 217
+234 27 231
+236 233 235
+238 56 237
+240 22 57
+242 239 241
+244 20 167
+246 20 22
+248 23 244
+250 247 249
+252 23 24
+254 25 251
+256 253 255
+258 21 36
+260 21 259
+262 22 261
+264 25 262
+266 227 265
+268 26 257
+270 27 267
+272 269 271
+274 56 273
+276 24 57
+278 275 277
+280 24 253
+282 6 20
+284 22 282
+286 24 284
+288 26 281
+290 27 286
+292 289 291
+294 56 293
+296 26 57
+298 295 297
+300 31 83
+302 32 82
+304 33 301
+306 303 305
+308 9 28
+310 28 309
+312 30 311
+314 8 29
+316 31 314
+318 109 317
+320 32 312
+322 33 319
+324 321 323
+326 34 307
+328 35 325
+330 327 329
+332 58 331
+334 28 59
+336 333 335
+338 28 166
+340 31 338
+342 109 341
+344 32 76
+346 33 343
+348 345 347
+350 30 313
+352 29 37
+354 30 352
+356 77 355
+358 32 351
+360 33 357
+362 359 361
+364 34 349
+366 35 363
+368 365 367
+370 58 369
+372 30 59
+374 371 373
+376 28 167
+378 28 30
+380 31 376
+382 379 381
+384 31 32
+386 33 383
+388 385 387
+390 29 36
+392 29 391
+394 30 393
+396 33 394
+398 359 397
+400 34 389
+402 35 399
+404 401 403
+406 58 405
+408 32 59
+410 407 409
+412 32 385
+414 8 28
+416 30 414
+418 32 416
+420 34 413
+422 35 418
+424 421 423
+426 58 425
+428 34 59
+430 427 429
+432 62 246
+434 56 432
+436 78 378
+438 58 436
+440 435 439
+442 68 94
+444 56 442
+446 84 108
+448 58 446
+450 445 449
+452 37 451
+454 36 450
+456 453 455
+458 37 441
+460 440 457
+462 459 461
+464 96 246
+466 17 464
+468 110 378
+470 19 468
+472 466 471
+474 467 470
+476 473 475
+478 466 470
+480 37 167
+482 36 441
+484 479 483
+486 453 481
+488 484 486
+i0 enable_thread_0
+i1 enable_thread_1
+i2 signal_thread_0
+i3 signal_thread_1
+l0 interrupts_disabled
+l1 thread_0_selected
+l2 thread_1_selected
+l3 thread_0_sleeping
+l4 thread_1_sleeping
+l5 thread_0_pc_0
+l6 thread_0_pc_1
+l7 thread_0_pc_2
+l8 thread_0_pc_3
+l9 thread_1_pc_0
+l10 thread_1_pc_1
+l11 thread_1_pc_2
+l12 thread_1_pc_3
+l13 semaphore_count_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit simulates a single processor that switches between 2 threads using
+a simplistic scheduler. The scheduler is triggered by interrupts, which can be
+disabled and enabled by the current thread. Additionally, a thread can enter a
+sleeping state, which will prevent the scheduler from switching to that thread.
+---
+On top of these features, a semaphore is implemented, which ensures that at most
+1 threads can be within the critical section simultaneously. When a thread wants
+to acquire the semaphore after receiving a signal, it disables interrupts and
+then compares the semaphore count to the limit. If possible, the thread changes
+the semaphore count and continues after enabling interrupts again. If that is
+not possible, the thread enters a sleeping state, enables interrupts, and yields
+to the scheduler. Once a thread has acquired the semaphore, it remains in the
+critical section until receiving another signal. Once that happens, it releases
+the semaphore by first disabling interrupts, thus disabling the scheduler, then
+checks if another thread is waiting for the semaphore. If that is the case, the
+active thread wakes one of the waiting threads, then enables interrupts again,
+allowing the scheduler to switch to the awakened thread at the next interrupt.
+If no thread is waiting for the semaphore, the active thread changes the
+semaphore count and enables interrupts again, resuming normal control flow, and
+returns to its initial state (i.e., waits for another signal).
+---
+The output variable is set if any of the following is true, none of which can
+happen:
+* 2 or more threads are in the critical section simultaneously,
+* an arithmetic overflow occurs when changing the semaphore count, or
+* a thread is sleeping for no reason.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

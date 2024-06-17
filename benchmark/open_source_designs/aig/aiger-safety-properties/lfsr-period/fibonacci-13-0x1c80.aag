@@ -1,0 +1,273 @@
+aag 208 13 27 1 168
+2
+4
+6
+8
+10
+12
+14
+16
+18
+20
+22
+24
+26
+28 289
+30 295
+32 301
+34 307
+36 313
+38 319
+40 325
+42 331
+44 337
+46 343
+48 349
+50 355
+52 361
+54 365
+56 369
+58 373
+60 377
+62 381
+64 385
+66 389
+68 393
+70 397
+72 401
+74 405
+76 409
+78 413
+80 414
+417
+82 43 52
+84 42 53
+86 83 85
+88 49 87
+90 48 86
+92 89 91
+94 51 93
+96 50 92
+98 95 97
+100 3 5
+102 7 9
+104 11 13
+106 15 17
+108 19 21
+110 23 25
+112 100 102
+114 104 106
+116 108 110
+118 112 114
+120 27 116
+122 118 120
+124 55 57
+126 59 61
+128 63 65
+130 67 69
+132 71 73
+134 75 77
+136 124 126
+138 128 130
+140 132 134
+142 136 138
+144 79 140
+146 142 144
+148 54 99
+150 55 98
+152 149 151
+154 28 56
+156 29 57
+158 155 157
+160 30 58
+162 31 59
+164 161 163
+166 32 60
+168 33 61
+170 167 169
+172 34 62
+174 35 63
+176 173 175
+178 36 64
+180 37 65
+182 179 181
+184 38 66
+186 39 67
+188 185 187
+190 40 68
+192 41 69
+194 191 193
+196 42 70
+198 43 71
+200 197 199
+202 44 72
+204 45 73
+206 203 205
+208 46 74
+210 47 75
+212 209 211
+214 48 76
+216 49 77
+218 215 217
+220 50 78
+222 51 79
+224 221 223
+226 153 159
+228 165 171
+230 177 183
+232 189 195
+234 201 207
+236 213 219
+238 226 228
+240 230 232
+242 234 236
+244 238 240
+246 225 242
+248 244 246
+250 147 248
+252 80 250
+254 122 252
+256 29 98
+258 31 33
+260 35 37
+262 39 41
+264 43 45
+266 47 49
+268 256 258
+270 260 262
+272 264 266
+274 268 270
+276 51 272
+278 274 276
+280 147 278
+282 122 251
+284 2 123
+286 99 122
+288 285 287
+290 4 123
+292 28 122
+294 291 293
+296 6 123
+298 30 122
+300 297 299
+302 8 123
+304 32 122
+306 303 305
+308 10 123
+310 34 122
+312 309 311
+314 12 123
+316 36 122
+318 315 317
+320 14 123
+322 38 122
+324 321 323
+326 16 123
+328 40 122
+330 327 329
+332 18 123
+334 42 122
+336 333 335
+338 20 123
+340 44 122
+342 339 341
+344 22 123
+346 46 122
+348 345 347
+350 24 123
+352 48 122
+354 351 353
+356 26 123
+358 50 122
+360 357 359
+362 54 122
+364 285 363
+366 56 122
+368 291 367
+370 58 122
+372 297 371
+374 60 122
+376 303 375
+378 62 122
+380 309 379
+382 64 122
+384 315 383
+386 66 122
+388 321 387
+390 68 122
+392 327 391
+394 70 122
+396 333 395
+398 72 122
+400 339 399
+402 74 122
+404 345 403
+406 76 122
+408 351 407
+410 78 122
+412 357 411
+414 81 282
+416 255 281
+i0 input_0
+i1 input_1
+i2 input_2
+i3 input_3
+i4 input_4
+i5 input_5
+i6 input_6
+i7 input_7
+i8 input_8
+i9 input_9
+i10 input_10
+i11 input_11
+i12 input_12
+l0 register_bit_0
+l1 register_bit_1
+l2 register_bit_2
+l3 register_bit_3
+l4 register_bit_4
+l5 register_bit_5
+l6 register_bit_6
+l7 register_bit_7
+l8 register_bit_8
+l9 register_bit_9
+l10 register_bit_10
+l11 register_bit_11
+l12 register_bit_12
+l13 copy_bit_0
+l14 copy_bit_1
+l15 copy_bit_2
+l16 copy_bit_3
+l17 copy_bit_4
+l18 copy_bit_5
+l19 copy_bit_6
+l20 copy_bit_7
+l21 copy_bit_8
+l22 copy_bit_9
+l23 copy_bit_10
+l24 copy_bit_11
+l25 copy_bit_12
+l26 counter_bit_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit computes the period (modulo 2) of a Fibonacci linear feedback shift
+register with 13 bits and taps 0x1C80, corresponding to the feedback polynomial
+x^13 + x^12 + x^11 + x^8 + 1 with period 8,191.
+---
+The circuit has 13 input bits. If any of them are set, the computation is
+(re)started: the value of the input bits is copied into the 13-bit LFSR and into
+a second 13-bit register that acts as an immutable copy of the initial value.
+Otherwise, the register performs its regular operation and increments the period
+(modulo 2) in each step. Once the register value reaches the initial value,
+which is stored in the second register, the period is reset to zero. Setting any
+input to one starts a new computation.
+---
+The output bit is set if one of the following conditions is true, neither of
+which is possible:
+* the register value becomes zero during its regular operation, or
+* the register value reaches the initial value again, but the period is even.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

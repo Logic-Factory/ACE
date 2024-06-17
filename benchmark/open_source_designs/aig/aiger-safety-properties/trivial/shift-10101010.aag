@@ -1,0 +1,35 @@
+aag 15 1 7 1 7
+2
+4 2
+6 4
+8 6
+10 8
+12 10
+14 12
+16 14
+30
+18 3 4
+20 7 8
+22 11 12
+24 15 16
+26 18 20
+28 22 24
+30 26 28
+i0 register_bit_0
+l0 register_bit_1
+l1 register_bit_2
+l2 register_bit_3
+l3 register_bit_4
+l4 register_bit_5
+l5 register_bit_6
+l6 register_bit_7
+o0 register_value_is_10101010
+c
+--------------------------------------------------------------------------------
+This circuit has a single input bit, which is shifted into an 8-bit register at
+each step. The output bit is set if and only if the register's value is
+10101010.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

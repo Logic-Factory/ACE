@@ -1,0 +1,10 @@
+aag 0 0 0 1 0
+1
+o0 true
+c
+--------------------------------------------------------------------------------
+This circuit represents the constant true (1).
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

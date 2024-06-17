@@ -1,0 +1,115 @@
+aag 85 3 6 1 76
+2
+4
+6
+8 149
+10 155
+12 161
+14 162
+16 164
+18 166
+170
+20 11 13
+22 15 17
+24 20 22
+26 19 24
+28 9 10
+30 8 11
+32 29 31
+34 8 10
+36 9 33
+38 8 32
+40 37 39
+42 8 33
+44 35 43
+46 11 12
+48 10 13
+50 47 49
+52 10 12
+54 44 51
+56 45 50
+58 55 57
+60 45 51
+62 53 61
+64 13 14
+66 12 15
+68 65 67
+70 12 14
+72 62 69
+74 63 68
+76 73 75
+78 63 69
+80 71 79
+82 15 16
+84 14 17
+86 83 85
+88 14 16
+90 80 87
+92 81 86
+94 91 93
+96 81 87
+98 89 97
+100 17 18
+102 16 19
+104 101 103
+106 16 18
+108 98 105
+110 99 104
+112 109 111
+114 99 105
+116 107 115
+118 8 41
+120 9 12
+122 119 121
+124 8 59
+126 9 14
+128 125 127
+130 8 77
+132 9 16
+134 131 133
+136 8 95
+138 9 18
+140 137 139
+142 8 113
+144 2 26
+146 27 28
+148 145 147
+150 4 26
+152 27 123
+154 151 153
+156 6 26
+158 27 129
+160 157 159
+162 27 135
+164 27 141
+166 27 142
+168 19 116
+170 8 169
+i0 input_bit_0
+i1 input_bit_1
+i2 input_bit_2
+l0 state_bit_0
+l1 state_bit_1
+l2 state_bit_2
+l3 state_bit_3
+l4 state_bit_4
+l5 state_bit_5
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit takes a 3-bit integer and then proceeds to compute the Collatz
+sequence starting at the given number. Once it reaches 1, it again copies the 3
+input bits and begins computing the new Collatz sequence. During the calculation
+of each sequence, any change in the input bits is ignored.
+---
+While the input consists of 3 bits only, internally, the circuit uses 6-bit
+arithmetic. The single output bit will be set to 1 whenever an overflow occurs
+in the calculation of the Collatz sequence (and will reset to 0 immediately
+afterwards).
+---
+No such overflow can occur. The maximum trajectory point is 52, which is less
+than 64.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

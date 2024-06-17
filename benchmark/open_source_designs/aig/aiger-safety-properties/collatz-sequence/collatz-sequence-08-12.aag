@@ -1,0 +1,232 @@
+aag 190 8 12 1 170
+2
+4
+6
+8
+10
+12
+14
+16
+18 327
+20 333
+22 339
+24 345
+26 351
+28 357
+30 363
+32 369
+34 370
+36 372
+38 374
+40 376
+380
+42 21 23
+44 25 27
+46 29 31
+48 33 35
+50 37 39
+52 42 44
+54 46 48
+56 41 50
+58 52 54
+60 56 58
+62 19 20
+64 18 21
+66 63 65
+68 18 20
+70 19 67
+72 18 66
+74 71 73
+76 18 67
+78 69 77
+80 21 22
+82 20 23
+84 81 83
+86 20 22
+88 78 85
+90 79 84
+92 89 91
+94 79 85
+96 87 95
+98 23 24
+100 22 25
+102 99 101
+104 22 24
+106 96 103
+108 97 102
+110 107 109
+112 97 103
+114 105 113
+116 25 26
+118 24 27
+120 117 119
+122 24 26
+124 114 121
+126 115 120
+128 125 127
+130 115 121
+132 123 131
+134 27 28
+136 26 29
+138 135 137
+140 26 28
+142 132 139
+144 133 138
+146 143 145
+148 133 139
+150 141 149
+152 29 30
+154 28 31
+156 153 155
+158 28 30
+160 150 157
+162 151 156
+164 161 163
+166 151 157
+168 159 167
+170 31 32
+172 30 33
+174 171 173
+176 30 32
+178 168 175
+180 169 174
+182 179 181
+184 169 175
+186 177 185
+188 33 34
+190 32 35
+192 189 191
+194 32 34
+196 186 193
+198 187 192
+200 197 199
+202 187 193
+204 195 203
+206 35 36
+208 34 37
+210 207 209
+212 34 36
+214 204 211
+216 205 210
+218 215 217
+220 205 211
+222 213 221
+224 37 38
+226 36 39
+228 225 227
+230 36 38
+232 222 229
+234 223 228
+236 233 235
+238 223 229
+240 231 239
+242 39 40
+244 38 41
+246 243 245
+248 38 40
+250 240 247
+252 241 246
+254 251 253
+256 241 247
+258 249 257
+260 18 75
+262 19 22
+264 261 263
+266 18 93
+268 19 24
+270 267 269
+272 18 111
+274 19 26
+276 273 275
+278 18 129
+280 19 28
+282 279 281
+284 18 147
+286 19 30
+288 285 287
+290 18 165
+292 19 32
+294 291 293
+296 18 183
+298 19 34
+300 297 299
+302 18 201
+304 19 36
+306 303 305
+308 18 219
+310 19 38
+312 309 311
+314 18 237
+316 19 40
+318 315 317
+320 18 255
+322 2 60
+324 61 62
+326 323 325
+328 4 60
+330 61 265
+332 329 331
+334 6 60
+336 61 271
+338 335 337
+340 8 60
+342 61 277
+344 341 343
+346 10 60
+348 61 283
+350 347 349
+352 12 60
+354 61 289
+356 353 355
+358 14 60
+360 61 295
+362 359 361
+364 16 60
+366 61 301
+368 365 367
+370 61 307
+372 61 313
+374 61 319
+376 61 320
+378 41 258
+380 18 379
+i0 input_bit_0
+i1 input_bit_1
+i2 input_bit_2
+i3 input_bit_3
+i4 input_bit_4
+i5 input_bit_5
+i6 input_bit_6
+i7 input_bit_7
+l0 state_bit_0
+l1 state_bit_1
+l2 state_bit_2
+l3 state_bit_3
+l4 state_bit_4
+l5 state_bit_5
+l6 state_bit_6
+l7 state_bit_7
+l8 state_bit_8
+l9 state_bit_9
+l10 state_bit_10
+l11 state_bit_11
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit takes a 8-bit integer and then proceeds to compute the Collatz
+sequence starting at the given number. Once it reaches 1, it again copies the 8
+input bits and begins computing the new Collatz sequence. During the calculation
+of each sequence, any change in the input bits is ignored.
+---
+While the input consists of 8 bits only, internally, the circuit uses 12-bit
+arithmetic. The single output bit will be set to 1 whenever an overflow occurs
+in the calculation of the Collatz sequence (and will reset to 0 immediately
+afterwards).
+---
+The smallest input that causes such an overflow is 27 (after 65 steps). The
+input that causes an overflow within the smallest number of steps is 191 (after
+11 steps).
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

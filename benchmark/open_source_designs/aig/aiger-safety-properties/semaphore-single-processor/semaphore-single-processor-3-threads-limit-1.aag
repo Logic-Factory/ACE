@@ -1,0 +1,431 @@
+aag 370 6 20 1 344
+2
+4
+6
+8
+10
+12
+14 193
+16 71
+18 77
+20 83
+22 227
+24 239
+26 251
+28 293
+30 331
+32 367
+34 387
+36 425
+38 463
+40 499
+42 519
+44 557
+46 595
+48 631
+50 651
+52 695
+741
+54 2 23
+56 4 25
+58 6 27
+60 55 56
+62 55 61
+64 58 62
+66 15 54
+68 14 16
+70 67 69
+72 15 60
+74 14 18
+76 73 75
+78 15 64
+80 14 20
+82 79 81
+84 2 71
+86 4 77
+88 6 83
+90 28 31
+92 33 35
+94 90 92
+96 29 31
+98 33 34
+100 96 98
+102 95 101
+104 84 103
+106 36 39
+108 41 43
+110 106 108
+112 37 39
+114 41 42
+116 112 114
+118 111 117
+120 86 119
+122 44 47
+124 49 51
+126 122 124
+128 45 47
+130 49 50
+132 128 130
+134 127 133
+136 88 135
+138 105 121
+140 137 138
+142 29 30
+144 32 35
+146 142 144
+148 32 34
+150 90 148
+152 147 151
+154 84 153
+156 37 38
+158 40 43
+160 156 158
+162 40 42
+164 106 162
+166 161 165
+168 86 167
+170 45 46
+172 48 51
+174 170 172
+176 48 50
+178 122 176
+180 175 179
+182 88 181
+184 155 169
+186 183 184
+188 14 186
+190 140 188
+192 140 191
+194 23 24
+196 23 195
+198 26 196
+200 96 148
+202 84 200
+204 112 162
+206 86 204
+208 128 176
+210 88 208
+212 203 207
+214 211 212
+216 90 144
+218 84 216
+220 22 215
+222 22 221
+224 219 222
+226 219 225
+228 106 158
+230 86 228
+232 194 215
+234 24 233
+236 231 234
+238 231 237
+240 122 172
+242 88 240
+244 198 215
+246 26 245
+248 243 246
+250 243 249
+252 23 25
+254 27 252
+256 31 97
+258 32 96
+260 33 257
+262 259 261
+264 9 28
+266 28 265
+268 30 267
+270 8 29
+272 31 270
+274 143 273
+276 32 268
+278 33 275
+280 277 279
+282 34 263
+284 35 281
+286 283 285
+288 84 287
+290 28 85
+292 289 291
+294 28 254
+296 31 294
+298 143 297
+300 32 90
+302 33 299
+304 301 303
+306 30 269
+308 29 53
+310 30 308
+312 91 311
+314 32 307
+316 33 313
+318 315 317
+320 34 305
+322 35 319
+324 321 323
+326 84 325
+328 30 85
+330 327 329
+332 28 255
+334 28 30
+336 31 332
+338 335 337
+340 31 32
+342 33 339
+344 341 343
+346 29 52
+348 29 347
+350 30 349
+352 33 350
+354 315 353
+356 34 345
+358 35 355
+360 357 359
+362 84 361
+364 32 85
+366 363 365
+368 32 341
+370 8 28
+372 30 370
+374 32 372
+376 34 369
+378 35 374
+380 377 379
+382 84 381
+384 34 85
+386 383 385
+388 39 113
+390 40 112
+392 41 389
+394 391 393
+396 11 36
+398 36 397
+400 38 399
+402 10 37
+404 39 402
+406 157 405
+408 40 400
+410 41 407
+412 409 411
+414 42 395
+416 43 413
+418 415 417
+420 86 419
+422 36 87
+424 421 423
+426 36 254
+428 39 426
+430 157 429
+432 40 106
+434 41 431
+436 433 435
+438 38 401
+440 37 53
+442 38 440
+444 107 443
+446 40 439
+448 41 445
+450 447 449
+452 42 437
+454 43 451
+456 453 455
+458 86 457
+460 38 87
+462 459 461
+464 36 255
+466 36 38
+468 39 464
+470 467 469
+472 39 40
+474 41 471
+476 473 475
+478 37 52
+480 37 479
+482 38 481
+484 41 482
+486 447 485
+488 42 477
+490 43 487
+492 489 491
+494 86 493
+496 40 87
+498 495 497
+500 40 473
+502 10 36
+504 38 502
+506 40 504
+508 42 501
+510 43 506
+512 509 511
+514 86 513
+516 42 87
+518 515 517
+520 47 129
+522 48 128
+524 49 521
+526 523 525
+528 13 44
+530 44 529
+532 46 531
+534 12 45
+536 47 534
+538 171 537
+540 48 532
+542 49 539
+544 541 543
+546 50 527
+548 51 545
+550 547 549
+552 88 551
+554 44 89
+556 553 555
+558 44 254
+560 47 558
+562 171 561
+564 48 122
+566 49 563
+568 565 567
+570 46 533
+572 45 53
+574 46 572
+576 123 575
+578 48 571
+580 49 577
+582 579 581
+584 50 569
+586 51 583
+588 585 587
+590 88 589
+592 46 89
+594 591 593
+596 44 255
+598 44 46
+600 47 596
+602 599 601
+604 47 48
+606 49 603
+608 605 607
+610 45 52
+612 45 611
+614 46 613
+616 49 614
+618 579 617
+620 50 609
+622 51 619
+624 621 623
+626 88 625
+628 48 89
+630 627 629
+632 48 605
+634 12 44
+636 46 634
+638 48 636
+640 50 633
+642 51 638
+644 641 643
+646 88 645
+648 50 89
+650 647 649
+652 92 334
+654 84 652
+656 108 466
+658 86 656
+660 124 598
+662 88 660
+664 655 659
+666 663 664
+668 98 142
+670 84 668
+672 114 156
+674 86 672
+676 130 170
+678 88 676
+680 671 675
+682 679 680
+684 53 683
+686 52 682
+688 685 687
+690 53 667
+692 666 689
+694 691 693
+696 144 334
+698 23 696
+700 158 466
+702 25 700
+704 172 598
+706 27 704
+708 698 703
+710 699 702
+712 709 711
+714 698 702
+716 707 713
+718 706 712
+720 717 719
+722 706 713
+724 714 723
+726 715 722
+728 725 727
+730 714 722
+732 53 255
+734 52 667
+736 728 735
+738 685 733
+740 736 738
+i0 enable_thread_0
+i1 enable_thread_1
+i2 enable_thread_2
+i3 signal_thread_0
+i4 signal_thread_1
+i5 signal_thread_2
+l0 interrupts_disabled
+l1 thread_0_selected
+l2 thread_1_selected
+l3 thread_2_selected
+l4 thread_0_sleeping
+l5 thread_1_sleeping
+l6 thread_2_sleeping
+l7 thread_0_pc_0
+l8 thread_0_pc_1
+l9 thread_0_pc_2
+l10 thread_0_pc_3
+l11 thread_1_pc_0
+l12 thread_1_pc_1
+l13 thread_1_pc_2
+l14 thread_1_pc_3
+l15 thread_2_pc_0
+l16 thread_2_pc_1
+l17 thread_2_pc_2
+l18 thread_2_pc_3
+l19 semaphore_count_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit simulates a single processor that switches between 3 threads using
+a simplistic scheduler. The scheduler is triggered by interrupts, which can be
+disabled and enabled by the current thread. Additionally, a thread can enter a
+sleeping state, which will prevent the scheduler from switching to that thread.
+---
+On top of these features, a semaphore is implemented, which ensures that at most
+1 threads can be within the critical section simultaneously. When a thread wants
+to acquire the semaphore after receiving a signal, it disables interrupts and
+then compares the semaphore count to the limit. If possible, the thread changes
+the semaphore count and continues after enabling interrupts again. If that is
+not possible, the thread enters a sleeping state, enables interrupts, and yields
+to the scheduler. Once a thread has acquired the semaphore, it remains in the
+critical section until receiving another signal. Once that happens, it releases
+the semaphore by first disabling interrupts, thus disabling the scheduler, then
+checks if another thread is waiting for the semaphore. If that is the case, the
+active thread wakes one of the waiting threads, then enables interrupts again,
+allowing the scheduler to switch to the awakened thread at the next interrupt.
+If no thread is waiting for the semaphore, the active thread changes the
+semaphore count and enables interrupts again, resuming normal control flow, and
+returns to its initial state (i.e., waits for another signal).
+---
+The output variable is set if any of the following is true, none of which can
+happen:
+* 2 or more threads are in the critical section simultaneously,
+* an arithmetic overflow occurs when changing the semaphore count, or
+* a thread is sleeping for no reason.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

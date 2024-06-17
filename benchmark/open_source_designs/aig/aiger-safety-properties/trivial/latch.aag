@@ -1,0 +1,15 @@
+aag 2 1 1 1 0
+2
+4 2
+4
+i0 input
+l0 latch
+o0 previous_input
+c
+--------------------------------------------------------------------------------
+This circuit remembers the current input for the next iteration. That is, its
+output during iteration n + 1 is the same as the input during iteration n.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

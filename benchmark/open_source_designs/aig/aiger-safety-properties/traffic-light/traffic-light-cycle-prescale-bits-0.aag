@@ -1,0 +1,32 @@
+aag 12 0 3 1 9
+2 21
+4 23
+6 14
+24
+8 3 5
+10 7 8
+12 2 5
+14 2 4
+16 3 4
+18 13 17
+20 11 18
+22 7 13
+24 2 6
+l0 red
+l1 yellow
+l2 green
+o0 red_and_green
+c
+--------------------------------------------------------------------------------
+This circuit is a simple traffic light. Each of the three signals (red, yellow,
+green) is represented by one latch.
+---
+The traffic light initializes itself such that the red signal is on. It then
+follows a standard cycle: red, red and yellow, green, yellow, red.
+---
+The output bit is set whenever both the red and the green signal are on at the
+same time, which never happens.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

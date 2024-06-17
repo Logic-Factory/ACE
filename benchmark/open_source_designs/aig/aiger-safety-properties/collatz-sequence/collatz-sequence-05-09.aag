@@ -1,0 +1,172 @@
+aag 136 5 9 1 122
+2
+4
+6
+8
+10
+12 237
+14 243
+16 249
+18 255
+20 261
+22 262
+24 264
+26 266
+28 268
+272
+30 15 17
+32 19 21
+34 23 25
+36 27 29
+38 30 32
+40 34 36
+42 38 40
+44 13 14
+46 12 15
+48 45 47
+50 12 14
+52 13 49
+54 12 48
+56 53 55
+58 12 49
+60 51 59
+62 15 16
+64 14 17
+66 63 65
+68 14 16
+70 60 67
+72 61 66
+74 71 73
+76 61 67
+78 69 77
+80 17 18
+82 16 19
+84 81 83
+86 16 18
+88 78 85
+90 79 84
+92 89 91
+94 79 85
+96 87 95
+98 19 20
+100 18 21
+102 99 101
+104 18 20
+106 96 103
+108 97 102
+110 107 109
+112 97 103
+114 105 113
+116 21 22
+118 20 23
+120 117 119
+122 20 22
+124 114 121
+126 115 120
+128 125 127
+130 115 121
+132 123 131
+134 23 24
+136 22 25
+138 135 137
+140 22 24
+142 132 139
+144 133 138
+146 143 145
+148 133 139
+150 141 149
+152 25 26
+154 24 27
+156 153 155
+158 24 26
+160 150 157
+162 151 156
+164 161 163
+166 151 157
+168 159 167
+170 27 28
+172 26 29
+174 171 173
+176 26 28
+178 168 175
+180 169 174
+182 179 181
+184 169 175
+186 177 185
+188 12 57
+190 13 16
+192 189 191
+194 12 75
+196 13 18
+198 195 197
+200 12 93
+202 13 20
+204 201 203
+206 12 111
+208 13 22
+210 207 209
+212 12 129
+214 13 24
+216 213 215
+218 12 147
+220 13 26
+222 219 221
+224 12 165
+226 13 28
+228 225 227
+230 12 183
+232 2 42
+234 43 44
+236 233 235
+238 4 42
+240 43 193
+242 239 241
+244 6 42
+246 43 199
+248 245 247
+250 8 42
+252 43 205
+254 251 253
+256 10 42
+258 43 211
+260 257 259
+262 43 217
+264 43 223
+266 43 229
+268 43 230
+270 29 186
+272 12 271
+i0 input_bit_0
+i1 input_bit_1
+i2 input_bit_2
+i3 input_bit_3
+i4 input_bit_4
+l0 state_bit_0
+l1 state_bit_1
+l2 state_bit_2
+l3 state_bit_3
+l4 state_bit_4
+l5 state_bit_5
+l6 state_bit_6
+l7 state_bit_7
+l8 state_bit_8
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit takes a 5-bit integer and then proceeds to compute the Collatz
+sequence starting at the given number. Once it reaches 1, it again copies the 5
+input bits and begins computing the new Collatz sequence. During the calculation
+of each sequence, any change in the input bits is ignored.
+---
+While the input consists of 5 bits only, internally, the circuit uses 9-bit
+arithmetic. The single output bit will be set to 1 whenever an overflow occurs
+in the calculation of the Collatz sequence (and will reset to 0 immediately
+afterwards).
+---
+The smallest input that causes such an overflow is 27 (after 29 steps). The
+input that causes an overflow within the smallest number of steps is 31 (after
+24 steps).
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

@@ -1,0 +1,131 @@
+aag 92 3 18 1 71
+2
+4
+6
+8 1
+10 51
+12 63
+14 69
+16 75
+18 81
+20 87
+22 93
+24 99
+26 105
+28 111
+30 119
+32 127
+34 135
+36 143
+38 151
+40 159
+42 167
+184
+44 7 8
+46 2 44
+48 10 45
+50 47 49
+52 2 11
+54 44 52
+56 26 54
+58 12 55
+60 57 59
+62 8 60
+64 12 54
+66 14 55
+68 65 67
+70 14 54
+72 16 55
+74 71 73
+76 16 54
+78 18 55
+80 77 79
+82 18 54
+84 20 55
+86 83 85
+88 20 54
+90 22 55
+92 89 91
+94 22 54
+96 24 55
+98 95 97
+100 24 54
+102 26 55
+104 101 103
+106 4 64
+108 28 65
+110 107 109
+112 30 65
+114 4 70
+116 71 112
+118 115 117
+120 32 65
+122 4 76
+124 77 120
+126 123 125
+128 34 65
+130 4 82
+132 83 128
+134 131 133
+136 36 65
+138 4 88
+140 89 136
+142 139 141
+144 38 65
+146 4 94
+148 95 144
+150 147 149
+152 40 65
+154 4 100
+156 101 152
+158 155 157
+160 42 65
+162 4 56
+164 57 160
+166 163 165
+168 12 44
+170 28 31
+172 32 35
+174 36 38
+176 41 42
+178 170 172
+180 174 176
+182 178 180
+184 168 182
+i0 SCLK
+i1 MOSI
+i2 NOT_CS
+l0 init
+l1 prev_SCLK
+l2 mask_0
+l3 mask_1
+l4 mask_2
+l5 mask_3
+l6 mask_4
+l7 mask_5
+l8 mask_6
+l9 mask_7
+l10 bit_0
+l11 bit_1
+l12 bit_2
+l13 bit_3
+l14 bit_4
+l15 bit_5
+l16 bit_6
+l17 bit_7
+o0 MISO
+c
+--------------------------------------------------------------------------------
+This circuit implements a simplified Serial Peripheral Interface (SPI) sub that
+repeatedly receives 8 bits of data from a SPI main and outputs the MISO signal.
+The circuit sets MISO to high after receiving the bit sequence 10101101 (the
+first 8 bits of Euler's number).
+---
+The circuit ignores any inputs during the first cycle and instead initializes
+internal latches as necessary. Afterwards, NOT_CS must be set to low for the
+circuit to become active. A single bit of data is received from MOSI during the
+rising edge of SCLK. The internal buffer is reset after every 8 received bits.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

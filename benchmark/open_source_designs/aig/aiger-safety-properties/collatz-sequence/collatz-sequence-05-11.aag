@@ -1,0 +1,204 @@
+aag 166 5 11 1 150
+2
+4
+6
+8
+10
+12 293
+14 299
+16 305
+18 311
+20 317
+22 318
+24 320
+26 322
+28 324
+30 326
+32 328
+332
+34 15 17
+36 19 21
+38 23 25
+40 27 29
+42 31 33
+44 34 36
+46 38 40
+48 44 46
+50 42 48
+52 13 14
+54 12 15
+56 53 55
+58 12 14
+60 13 57
+62 12 56
+64 61 63
+66 12 57
+68 59 67
+70 15 16
+72 14 17
+74 71 73
+76 14 16
+78 68 75
+80 69 74
+82 79 81
+84 69 75
+86 77 85
+88 17 18
+90 16 19
+92 89 91
+94 16 18
+96 86 93
+98 87 92
+100 97 99
+102 87 93
+104 95 103
+106 19 20
+108 18 21
+110 107 109
+112 18 20
+114 104 111
+116 105 110
+118 115 117
+120 105 111
+122 113 121
+124 21 22
+126 20 23
+128 125 127
+130 20 22
+132 122 129
+134 123 128
+136 133 135
+138 123 129
+140 131 139
+142 23 24
+144 22 25
+146 143 145
+148 22 24
+150 140 147
+152 141 146
+154 151 153
+156 141 147
+158 149 157
+160 25 26
+162 24 27
+164 161 163
+166 24 26
+168 158 165
+170 159 164
+172 169 171
+174 159 165
+176 167 175
+178 27 28
+180 26 29
+182 179 181
+184 26 28
+186 176 183
+188 177 182
+190 187 189
+192 177 183
+194 185 193
+196 29 30
+198 28 31
+200 197 199
+202 28 30
+204 194 201
+206 195 200
+208 205 207
+210 195 201
+212 203 211
+214 31 32
+216 30 33
+218 215 217
+220 30 32
+222 212 219
+224 213 218
+226 223 225
+228 213 219
+230 221 229
+232 12 65
+234 13 16
+236 233 235
+238 12 83
+240 13 18
+242 239 241
+244 12 101
+246 13 20
+248 245 247
+250 12 119
+252 13 22
+254 251 253
+256 12 137
+258 13 24
+260 257 259
+262 12 155
+264 13 26
+266 263 265
+268 12 173
+270 13 28
+272 269 271
+274 12 191
+276 13 30
+278 275 277
+280 12 209
+282 13 32
+284 281 283
+286 12 227
+288 2 50
+290 51 52
+292 289 291
+294 4 50
+296 51 237
+298 295 297
+300 6 50
+302 51 243
+304 301 303
+306 8 50
+308 51 249
+310 307 309
+312 10 50
+314 51 255
+316 313 315
+318 51 261
+320 51 267
+322 51 273
+324 51 279
+326 51 285
+328 51 286
+330 33 230
+332 12 331
+i0 input_bit_0
+i1 input_bit_1
+i2 input_bit_2
+i3 input_bit_3
+i4 input_bit_4
+l0 state_bit_0
+l1 state_bit_1
+l2 state_bit_2
+l3 state_bit_3
+l4 state_bit_4
+l5 state_bit_5
+l6 state_bit_6
+l7 state_bit_7
+l8 state_bit_8
+l9 state_bit_9
+l10 state_bit_10
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit takes a 5-bit integer and then proceeds to compute the Collatz
+sequence starting at the given number. Once it reaches 1, it again copies the 5
+input bits and begins computing the new Collatz sequence. During the calculation
+of each sequence, any change in the input bits is ignored.
+---
+While the input consists of 5 bits only, internally, the circuit uses 11-bit
+arithmetic. The single output bit will be set to 1 whenever an overflow occurs
+in the calculation of the Collatz sequence (and will reset to 0 immediately
+afterwards).
+---
+The smallest input that causes such an overflow is 27 (after 61 steps). The
+input that causes an overflow within the smallest number of steps is 31 (after
+56 steps).
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.

@@ -1,0 +1,327 @@
+aag 253 16 33 1 204
+2
+4
+6
+8
+10
+12
+14
+16
+18
+20
+22
+24
+26
+28
+30
+32
+34 349
+36 355
+38 361
+40 367
+42 373
+44 379
+46 385
+48 391
+50 397
+52 403
+54 409
+56 415
+58 421
+60 427
+62 433
+64 439
+66 443
+68 447
+70 451
+72 455
+74 459
+76 463
+78 467
+80 471
+82 475
+84 479
+86 483
+88 487
+90 491
+92 495
+94 499
+96 503
+98 504
+507
+100 41 64
+102 40 65
+104 101 103
+106 59 105
+108 58 104
+110 107 109
+112 63 111
+114 62 110
+116 113 115
+118 3 5
+120 7 9
+122 11 13
+124 15 17
+126 19 21
+128 23 25
+130 27 29
+132 31 33
+134 118 120
+136 122 124
+138 126 128
+140 130 132
+142 134 136
+144 138 140
+146 142 144
+148 67 69
+150 71 73
+152 75 77
+154 79 81
+156 83 85
+158 87 89
+160 91 93
+162 95 97
+164 148 150
+166 152 154
+168 156 158
+170 160 162
+172 164 166
+174 168 170
+176 172 174
+178 66 117
+180 67 116
+182 179 181
+184 34 68
+186 35 69
+188 185 187
+190 36 70
+192 37 71
+194 191 193
+196 38 72
+198 39 73
+200 197 199
+202 40 74
+204 41 75
+206 203 205
+208 42 76
+210 43 77
+212 209 211
+214 44 78
+216 45 79
+218 215 217
+220 46 80
+222 47 81
+224 221 223
+226 48 82
+228 49 83
+230 227 229
+232 50 84
+234 51 85
+236 233 235
+238 52 86
+240 53 87
+242 239 241
+244 54 88
+246 55 89
+248 245 247
+250 56 90
+252 57 91
+254 251 253
+256 58 92
+258 59 93
+260 257 259
+262 60 94
+264 61 95
+266 263 265
+268 62 96
+270 63 97
+272 269 271
+274 183 189
+276 195 201
+278 207 213
+280 219 225
+282 231 237
+284 243 249
+286 255 261
+288 267 273
+290 274 276
+292 278 280
+294 282 284
+296 286 288
+298 290 292
+300 294 296
+302 298 300
+304 177 302
+306 98 304
+308 146 306
+310 35 116
+312 37 39
+314 41 43
+316 45 47
+318 49 51
+320 53 55
+322 57 59
+324 61 63
+326 310 312
+328 314 316
+330 318 320
+332 322 324
+334 326 328
+336 330 332
+338 334 336
+340 177 338
+342 146 305
+344 2 147
+346 117 146
+348 345 347
+350 4 147
+352 34 146
+354 351 353
+356 6 147
+358 36 146
+360 357 359
+362 8 147
+364 38 146
+366 363 365
+368 10 147
+370 40 146
+372 369 371
+374 12 147
+376 42 146
+378 375 377
+380 14 147
+382 44 146
+384 381 383
+386 16 147
+388 46 146
+390 387 389
+392 18 147
+394 48 146
+396 393 395
+398 20 147
+400 50 146
+402 399 401
+404 22 147
+406 52 146
+408 405 407
+410 24 147
+412 54 146
+414 411 413
+416 26 147
+418 56 146
+420 417 419
+422 28 147
+424 58 146
+426 423 425
+428 30 147
+430 60 146
+432 429 431
+434 32 147
+436 62 146
+438 435 437
+440 66 146
+442 345 441
+444 68 146
+446 351 445
+448 70 146
+450 357 449
+452 72 146
+454 363 453
+456 74 146
+458 369 457
+460 76 146
+462 375 461
+464 78 146
+466 381 465
+468 80 146
+470 387 469
+472 82 146
+474 393 473
+476 84 146
+478 399 477
+480 86 146
+482 405 481
+484 88 146
+486 411 485
+488 90 146
+490 417 489
+492 92 146
+494 423 493
+496 94 146
+498 429 497
+500 96 146
+502 435 501
+504 99 342
+506 309 341
+i0 input_0
+i1 input_1
+i2 input_2
+i3 input_3
+i4 input_4
+i5 input_5
+i6 input_6
+i7 input_7
+i8 input_8
+i9 input_9
+i10 input_10
+i11 input_11
+i12 input_12
+i13 input_13
+i14 input_14
+i15 input_15
+l0 register_bit_0
+l1 register_bit_1
+l2 register_bit_2
+l3 register_bit_3
+l4 register_bit_4
+l5 register_bit_5
+l6 register_bit_6
+l7 register_bit_7
+l8 register_bit_8
+l9 register_bit_9
+l10 register_bit_10
+l11 register_bit_11
+l12 register_bit_12
+l13 register_bit_13
+l14 register_bit_14
+l15 register_bit_15
+l16 copy_bit_0
+l17 copy_bit_1
+l18 copy_bit_2
+l19 copy_bit_3
+l20 copy_bit_4
+l21 copy_bit_5
+l22 copy_bit_6
+l23 copy_bit_7
+l24 copy_bit_8
+l25 copy_bit_9
+l26 copy_bit_10
+l27 copy_bit_11
+l28 copy_bit_12
+l29 copy_bit_13
+l30 copy_bit_14
+l31 copy_bit_15
+l32 counter_bit_0
+o0 bad_state_detector
+c
+--------------------------------------------------------------------------------
+This circuit computes the period (modulo 2) of a Fibonacci linear feedback shift
+register with 16 bits and taps 0xD008, corresponding to the feedback polynomial
+x^16 + x^15 + x^13 + x^4 + 1 with period 65,535.
+---
+The circuit has 16 input bits. If any of them are set, the computation is
+(re)started: the value of the input bits is copied into the 16-bit LFSR and into
+a second 16-bit register that acts as an immutable copy of the initial value.
+Otherwise, the register performs its regular operation and increments the period
+(modulo 2) in each step. Once the register value reaches the initial value,
+which is stored in the second register, the period is reset to zero. Setting any
+input to one starts a new computation.
+---
+The output bit is set if one of the following conditions is true, neither of
+which is possible:
+* the register value becomes zero during its regular operation, or
+* the register value reaches the initial value again, but the period is even.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

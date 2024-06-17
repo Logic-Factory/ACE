@@ -1,0 +1,167 @@
+aag 127 5 9 1 113
+2
+4
+6
+8
+10
+12 49
+14 69
+16 93
+18 125
+20 149
+22 171
+24 203
+26 227
+28 249
+254
+30 18 21
+32 23 30
+34 19 20
+36 22 34
+38 12 37
+40 33 38
+42 33 41
+44 2 43
+46 3 12
+48 45 47
+50 24 27
+52 29 50
+54 25 26
+56 28 54
+58 14 57
+60 53 58
+62 53 61
+64 4 63
+66 5 14
+68 65 67
+70 23 34
+72 2 70
+74 29 54
+76 4 74
+78 72 76
+80 73 77
+82 16 80
+84 72 81
+86 83 85
+88 10 78
+90 79 87
+92 89 91
+94 7 18
+96 18 95
+98 21 97
+100 35 99
+102 15 18
+104 18 103
+106 6 19
+108 20 105
+110 21 106
+112 109 111
+114 22 101
+116 23 113
+118 115 117
+120 2 119
+122 3 18
+124 121 123
+126 6 18
+128 16 19
+130 127 129
+132 21 131
+134 35 133
+136 31 35
+138 22 135
+140 23 137
+142 139 141
+144 2 143
+146 3 20
+148 145 147
+150 17 19
+152 19 151
+154 21 153
+156 35 155
+158 18 20
+160 22 157
+162 23 158
+164 161 163
+166 2 165
+168 3 22
+170 167 169
+172 9 24
+174 24 173
+176 27 175
+178 55 177
+180 13 24
+182 24 181
+184 8 25
+186 26 183
+188 27 184
+190 187 189
+192 28 179
+194 29 191
+196 193 195
+198 4 197
+200 5 24
+202 199 201
+204 8 24
+206 17 25
+208 205 207
+210 27 209
+212 55 211
+214 51 55
+216 28 213
+218 29 215
+220 217 219
+222 4 221
+224 5 26
+226 223 225
+228 16 25
+230 25 229
+232 27 231
+234 55 233
+236 24 26
+238 28 235
+240 29 236
+242 239 241
+244 4 243
+246 5 28
+248 245 247
+250 22 30
+252 28 50
+254 250 252
+i0 enable_thread_0
+i1 enable_thread_1
+i2 signal_thread_0
+i3 signal_thread_1
+i4 random
+l0 flag_0
+l1 flag_1
+l2 turn
+l3 thread_0_pc_0
+l4 thread_0_pc_1
+l5 thread_0_pc_2
+l6 thread_1_pc_0
+l7 thread_1_pc_1
+l8 thread_1_pc_2
+o0 both_threads_in_critical_section
+c
+--------------------------------------------------------------------------------
+This circuit implements Peterson's algorithm for mutual exclusion among two
+threads. Each of the two threads in this example waits for its respective
+"signal" input, then attempts to enter the critical section. Once a thread
+enters the critical section, it remains there until it receives another "signal"
+input. Peterson's algorithm guarantees that only one thread can be within the
+critical section at any given time.
+---
+Both threads are assumed to run in parallel, that is, multiple instructions may
+be executed at any given time. The first two inputs control which of the two
+threads are active, if any. Thus, scheduling is non-deterministic. Additionally,
+each thread has a separate signal input so that the timing of their respective
+signals is independent instruction scheduling. When both threads attempt to
+write to the same variable at the same time, the result is undefined, that is,
+it depends on the "random" input.
+---
+The output bit is set only if both threads are within the critical section at
+the same time, which should never happen.
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is UNSATISFIABLE.

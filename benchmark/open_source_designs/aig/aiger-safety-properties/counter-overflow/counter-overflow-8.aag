@@ -1,0 +1,56 @@
+aag 36 0 8 1 28
+2 3
+4 23
+6 31
+8 39
+10 47
+12 55
+14 63
+16 71
+72
+18 3 4
+20 2 5
+22 19 21
+24 2 4
+26 6 25
+28 7 24
+30 27 29
+32 6 24
+34 8 33
+36 9 32
+38 35 37
+40 8 32
+42 10 41
+44 11 40
+46 43 45
+48 10 40
+50 12 49
+52 13 48
+54 51 53
+56 12 48
+58 14 57
+60 15 56
+62 59 61
+64 14 56
+66 16 65
+68 17 64
+70 67 69
+72 16 64
+l0 counter_bit_0
+l1 counter_bit_1
+l2 counter_bit_2
+l3 counter_bit_3
+l4 counter_bit_4
+l5 counter_bit_5
+l6 counter_bit_6
+l7 counter_bit_7
+o0 overflow_indicator
+c
+--------------------------------------------------------------------------------
+This circuit is a simple 8-bit counter that increments the stored value by one
+during each transition. The single output bit is set to indicate an overflow
+(i.e., every 256 iterations).
+--------------------------------------------------------------------------------
+This file is part of https://github.com/tniessen/aiger-safety-properties.
+---
+The output variable is SATISFIABLE.
