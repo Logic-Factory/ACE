@@ -1,9 +1,9 @@
 import torch
 from torch_geometric.data import Data
 
-from tag import Tag
-from node import Physics, Node
-
+from .tag import Tag
+from .node import Physics, Node  
+    
 class Circuit(object):
     """
     """
@@ -22,7 +22,13 @@ class Circuit(object):
     def get_type(self):
         return self._type
     
-    def get_node(self, idx:int):
+    def node_at(self, idx:int) -> Node:
+        return self._nodes[idx]
+    
+    def get_node(self, name:str) -> Node:
+        if name not in self._names:
+            raise ValueError("Invalid node name")
+        idx = self._names[name]
         return self._nodes[idx]
     
     def is_gtech(self):
@@ -49,11 +55,15 @@ class Circuit(object):
     def add_edge(self, node_src:int, node_dest:int):
         self._edges.append((node_src, node_dest))
 
+    def add_fanin(self, idx:int, fanin:int):
+        self._nodes[idx].add_fanin(fanin)
+
     def add_const0(self, name:str):
         idx = 0
         node = Node.make_const0(name, idx)
         self._const0 = node
         self._nodes.append(node)
+        self._names[name] = idx
         return idx
 
     def add_pi(self, name:str):
@@ -61,14 +71,16 @@ class Circuit(object):
         node = Node.make_pi(name, idx)
         self._pis.append(name)
         self._nodes.append(node)
+        self._names[name] = idx
         return idx
 
-    def add_po(self, name:str, fanin0):
+    def add_po(self, name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_po(name, idx, fanin0)
+        node = Node.make_po(name, idx, fanins)
         self._pos.append(node)
         self._nodes.append(node)
-        self.add_edge(fanin0, idx)  # add fanin0 -> idx 
+        # self.add_edge(fanin0, idx)  # add fanin0 -> idx 
+        self._names[name] = idx
         return idx
     
     def add_gate(self, type_node:str, name:str, fanins:list = []):
@@ -77,8 +89,20 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
         
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
+        return idx
+
+    def add_inverter(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_inverter(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_and2(self, name:str, fanins:list = []):
@@ -89,6 +113,7 @@ class Circuit(object):
 
         for fanin in fanins:
             self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_nand2(self, name:str, fanins:list = []):
@@ -97,8 +122,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_or2(self, name:str, fanins:list = []):
@@ -107,8 +133,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_nor2(self, name:str, fanins:list = []):
@@ -117,8 +144,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_xnor2(self, name:str, fanins:list = []):
@@ -129,6 +157,7 @@ class Circuit(object):
 
         for fanin in fanins:
             self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_xor2(self, name:str, fanins:list = []):
@@ -137,8 +166,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_maj3(self, name:str, fanins:list = []):
@@ -147,8 +177,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_xor3(self, name:str, fanins:list = []):
@@ -157,8 +188,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def add_cell(self, name:str, fanins:list = [], physics:Physics=None):
@@ -167,8 +199,9 @@ class Circuit(object):
         self._gates.append(node)
         self._nodes.append(node)
 
-        for fanin in fanins:
-            self.add_edge(fanin, idx)  # add fanin -> idx
+        # for fanin in fanins:
+        #     self.add_edge(fanin, idx)  # add fanin -> idx
+        self._names[name] = idx
         return idx
 
     def foreach_pi(self, func):
@@ -189,7 +222,7 @@ class Circuit(object):
     
     def foreach_fanin(self, node:Node, func):
         for fanin in node.get_fanins():
-            func(self.get_node(fanin))
+            func(self.node_at(fanin))
 
     def init_node_feature(self, type_node:str, size:int = 0):
         # TODO: use different node embedding method for different circuit type
@@ -237,10 +270,17 @@ if __name__ == '__main__':
     idx_d = aig.add_pi('d')
     # internal gates
     idx_g1 = aig.add_gate(Tag.str_node_and2(), 'g1', [idx_a, idx_b])
+    aig.add_fanin(idx_g1, idx_a)
+    aig.add_fanin(idx_g1, idx_b)
     idx_g2 = aig.add_gate(Tag.str_node_and2(), 'g2', [idx_c, idx_d])
+    aig.add_fanin(idx_g2, idx_c)
+    aig.add_fanin(idx_g2, idx_d)
     idx_g3 = aig.add_gate(Tag.str_node_and2(), 'g3', [idx_g1, idx_g2])
+    aig.add_fanin(idx_g3, idx_g1)
+    aig.add_fanin(idx_g3, idx_g2)
     # primary outputs
-    aig.add_po("f", idx_g3)
+    idx_f = aig.add_po("f", idx_g3)
+    aig.add_fanin(idx_f, idx_g3)
     
     torch_data = aig.to_torch_geometric()
     print(torch_data)

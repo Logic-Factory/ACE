@@ -47,9 +47,25 @@ class Tag(object):
     #   tag of the nodes
     ####################################################
     @staticmethod
-    def tags_gate():
-        tags = ["BUFFER", 
+    def tags_node():
+        tags = ["CONST0", 
+                "PI", 
+                "PO", 
                 "INVERTER", 
+                "AND2", 
+                "NAND2", 
+                "OR2", 
+                "NOR2", 
+                "XOR2", 
+                "XNOR2", 
+                "MAJ3", 
+                "XOR3",
+                "CELL"]
+        return tags
+    
+    @staticmethod
+    def tags_gate():
+        tags = ["INVERTER", 
                 "AND2", 
                 "NAND2", 
                 "OR2", 
@@ -62,24 +78,6 @@ class Tag(object):
         return tags
 
     @staticmethod
-    def tags_node():
-        tags = ["CONST0", 
-                "PI", 
-                "PO", 
-                "BUFFER", 
-                "INVERTER", 
-                "AND2", 
-                "NAND2", 
-                "OR2", 
-                "NOR2", 
-                "XOR2", 
-                "XNOR2", 
-                "MAJ3", 
-                "XOR3",
-                "CELL"]
-        return tags
-    
-    @staticmethod
     def str_node_const0():
         return "CONST0"
     
@@ -90,11 +88,7 @@ class Tag(object):
     @staticmethod
     def str_node_po():
         return "PO"
-    
-    @staticmethod
-    def str_node_buffer():
-        return "BUFFER"
-    
+
     @staticmethod
     def str_node_inverter():
         return "INVERTER"
