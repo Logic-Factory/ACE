@@ -2,9 +2,11 @@ import torch
 from torch_geometric.data import Data
 
 from tag import Tag
-from logic_node import LogicNode
+from node import Physics, Node
 
-class LogicGraph(object):
+class Circuit(object):
+    """
+    """
     def __init__(self, type_ckt:str):
         if type_ckt not in Tag.tags_circuit():
             raise ValueError("Invalid circuit type")
@@ -37,27 +39,30 @@ class LogicGraph(object):
     
     def is_xmg(self):
         return self._type == Tag.str_ckt_xmg()
+    
+    def is_cell(self):
+        return self._type == Tag.str_ckt_cell()
 
     def add_edge(self, node_src:int, node_dest:int):
         self._edges.append((node_src, node_dest))
 
     def add_const0(self, name:str):
         idx = 0
-        node = LogicNode.make_const0(name, idx)
+        node = Node.make_const0(name, idx)
         self._const0 = node
         self._nodes.append(node)
         return idx
 
     def add_pi(self, name:str):
         idx = len(self._nodes)
-        node = LogicNode.make_pi(name, idx)
+        node = Node.make_pi(name, idx)
         self._pis.append(name)
         self._nodes.append(node)
         return idx
 
     def add_po(self, name:str, fanin0):
         idx = len(self._nodes)
-        node = LogicNode.make_po(name, idx, fanin0)
+        node = Node.make_po(name, idx, fanin0)
         self._pos.append(node)
         self._nodes.append(node)
         self.add_edge(fanin0, idx)  # add fanin0 -> idx 
@@ -65,19 +70,109 @@ class LogicGraph(object):
     
     def add_gate(self, type_node:str, name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = LogicNode.make_node(type_node, name, idx, fanins)
+        node = Node.make_node(type_node, name, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
         
-        # add edge between nodes
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_and2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_and2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_nand2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_nand2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_or2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_or2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_nor2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_nor2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_xnor2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_xnor2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_xor2(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_xor2(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_maj3(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_maj3(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_xor3(self, name:str, fanins:list = []):
+        idx = len(self._nodes)
+        node = Node.make_xor3(name, idx, fanins)
+        self._gates.append(node)
+        self._nodes.append(node)
+
+        for fanin in fanins:
+            self.add_edge(fanin, idx)  # add fanin -> idx
+        return idx
+
+    def add_cell(self, name:str, fanins:list = [], physics:Physics=None):
+        idx = len(self._nodes)
+        node = Node.make_cell(name, idx, fanins, physics)
+        self._gates.append(node)
+        self._nodes.append(node)
+
         for fanin in fanins:
             self.add_edge(fanin, idx)  # add fanin -> idx
         return idx
 
     def init_node_feature(self, type_node:str, size:int = 0):
+        # TODO: use different node embedding method for different circuit type
         if type_node not in Tag.tags_node():
             raise ValueError("Invalid node type")
-        domains = LogicNode.node_domains()
+        domains = Node.node_domains()
         node_feature = []
         if size == 0 or size >= len(Tag.tags_node()):
             node_feature = [0] * len(domains)
@@ -109,7 +204,7 @@ class LogicGraph(object):
         return Data(x=self.get_node_features(), edge_index=self.get_edge_index())
 
 if __name__ == '__main__':
-    aig = LogicGraph(Tag.str_ckt_aig())
+    aig = Circuit(Tag.str_ckt_aig())
     # constant
     idx_const0 = aig.add_const0('const0')
     # primary inputs

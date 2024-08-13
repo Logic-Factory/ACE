@@ -57,7 +57,8 @@ class Tag(object):
                 "XOR2", 
                 "XNOR2", 
                 "MAJ3", 
-                "XOR3"]
+                "XOR3",
+                "CELL"]
         return tags
 
     @staticmethod
@@ -74,7 +75,8 @@ class Tag(object):
                 "XOR2", 
                 "XNOR2", 
                 "MAJ3", 
-                "XOR3"]
+                "XOR3",
+                "CELL"]
         return tags
     
     @staticmethod
@@ -129,4 +131,7 @@ class Tag(object):
     def str_node_xor3():
         return "XOR3"
     
+    @staticmethod
+    def str_node_cell():
+        return "CELL"
     
