@@ -12,7 +12,7 @@ class Circuit(object):
             raise ValueError("Invalid circuit type")
         self._type = type_ckt
         self._const0 = None # constant 0
-        self._pis = []      # primary input nodes: const-0 + inputs
+        self._pis = []      # primary input nodes: inputs
         self._pos = []      # primary output nodes
         self._gates = []    # internal logic nodes
         self._nodes = []    # all nodes: pis + gates + pos
@@ -21,6 +21,9 @@ class Circuit(object):
 
     def get_type(self):
         return self._type
+    
+    def get_node(self, idx:int):
+        return self._nodes[idx]
     
     def is_gtech(self):
         return self._type == Tag.str_ckt_gtech()
@@ -167,6 +170,26 @@ class Circuit(object):
         for fanin in fanins:
             self.add_edge(fanin, idx)  # add fanin -> idx
         return idx
+
+    def foreach_pi(self, func):
+        for node in self._pis:
+            func(node)
+
+    def forach_po(self, func):
+        for node in self._pos:
+            func(node)
+            
+    def foreach_gate(self, func):
+        for node in self._gates:
+            func(node)
+
+    def foreach_node(self, func):
+        for node in self._nodes:
+            func(node)
+    
+    def foreach_fanin(self, node:Node, func):
+        for fanin in node.get_fanins():
+            func(self.get_node(fanin))
 
     def init_node_feature(self, type_node:str, size:int = 0):
         # TODO: use different node embedding method for different circuit type
