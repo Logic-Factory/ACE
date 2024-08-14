@@ -1,12 +1,15 @@
-import sys
-sys.path.append("/workspace/OpenLS-D/src")
-
-from circuit.tag import Tag
-from circuit.node import Physics, Node
-from circuit.circuit import Circuit
+import os, sys
+current_dir = os.path.split(os.path.abspath(__file__))[0]
+proj_dir = current_dir.rsplit('/', 2)[0]
+sys.path.append(proj_dir)
 
 import argparse
 import networkx as nx
+
+from src.circuit.tag import Tag
+from src.circuit.node import Node
+from src.circuit.circuit import Circuit
+
 
 def load_graphml(filename:str, type_ckt:str) -> Circuit:
     """
@@ -57,7 +60,6 @@ def load_graphml(filename:str, type_ckt:str) -> Circuit:
     for source, target, attr in raw_graph.edges(data=True):
         src = circuit.get_node(source)
         dst = circuit.get_node(target)
-        circuit.add_edge(src.get_idx(), dst.get_idx())
         circuit.add_fanin(dst.get_idx(), src.get_idx())
     
     return circuit

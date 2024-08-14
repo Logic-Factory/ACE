@@ -1,4 +1,9 @@
-from .tag import Tag
+import os, sys
+current_dir = os.path.split(os.path.abspath(__file__))[0]
+proj_dir = current_dir.rsplit('/', 2)[0]
+sys.path.append(proj_dir)
+
+from src.circuit.tag import Tag
 
 class Physics(object):
     def __init__(self, x, y, z):
