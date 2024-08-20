@@ -27,32 +27,35 @@ def load_graphml(filename:str, type_ckt:str) -> Circuit:
     for id, attr in raw_graph.nodes(data=True):
         node_type = attr.get('type')
         assert node_type in Tag.tags_node(), f"Invalid node type: {node_type}"
-        # node_name = attr.get('name')
-        node_name = str(id)
+
+        node_id = str(id)
+        node_name = attr.get('name')
         if node_type == Tag.str_node_const0():
-            circuit.add_const0(node_name)
+            circuit.add_const0(node_id, node_name)
         elif node_type == Tag.str_node_pi():
-            circuit.add_pi(node_name)
+            circuit.add_pi(node_id, node_name)
         elif node_type == Tag.str_node_inverter():
-            circuit.add_inverter(node_name)
+            circuit.add_inverter(node_id, node_name)
         elif node_type == Tag.str_node_and2():
-            circuit.add_and2(node_name)
+            circuit.add_and2(node_id, node_name)
         elif node_type == Tag.str_node_or2():
-            circuit.add_or2(node_name)
+            circuit.add_or2(node_id, node_name)
         elif node_type == Tag.str_node_xor2():
-            circuit.add_xor2(node_name)
+            circuit.add_xor2(node_id, node_name)
         elif node_type == Tag.str_node_nand2():
-            circuit.add_nand2(node_name)
+            circuit.add_nand2(node_id, node_name)
         elif node_type == Tag.str_node_nor2():
-            circuit.add_nor2(node_name)
+            circuit.add_nor2(node_id, node_name)
         elif node_type == Tag.str_node_xnor2():
-            circuit.add_xnor2(node_name)
+            circuit.add_xnor2(node_id, node_name)
         elif node_type == Tag.str_node_maj3():
-            circuit.add_maj3(node_name)
+            circuit.add_maj3(node_id, node_name)
         elif node_type == Tag.str_node_xor3():
-            circuit.add_xor3(node_name)
+            circuit.add_xor3(node_id, node_name)
+        elif node_type == Tag.str_node_cell():
+            circuit.add_cell(node_id, node_name)
         elif node_type == Tag.str_node_po():
-            circuit.add_po(node_name)
+            circuit.add_po(node_id, node_name)
         else:
             raise ValueError(f"Invalid node type: {node_type}")
     

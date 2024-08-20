@@ -20,9 +20,10 @@ class Circuit(object):
         self._pis : list[Node]  = []      # primary input nodes: inputs
         self._pos : list[Node]  = []      # primary output nodes
         self._gates : list[Node]  = []    # internal logic nodes
-        self._nodes : list[Node] = []    # all nodes: pis + gates + pos
-        self._names = {}    # store the dict of the name its mapped node
-        self._edges = []    
+        self._nodes : list[Node] = []     # all nodes: pis + gates + pos
+        self._names : list[Node] = []     # store the name of each node
+        self._node_map = {}               # [key, value], key is the index in old ckt, value is the index in self._nodes
+        self._edges = []                  # store the edges of the circuit
         
         # attributes
         self._depths = []
@@ -34,10 +35,10 @@ class Circuit(object):
     def node_at(self, idx:int) -> Node:
         return self._nodes[idx]
     
-    def get_node(self, name:str) -> Node:
-        if name not in self._names:
-            raise ValueError("Invalid node name")
-        idx = self._names[name]
+    def get_node(self, old_id:str) -> Node:
+        if old_id not in self._node_map:
+            raise ValueError("Invalid node old_id")
+        idx = self._node_map[old_id]
         return self._nodes[idx]
     
     def is_gtech(self):
@@ -65,116 +66,130 @@ class Circuit(object):
         self._nodes[idx].add_fanin(fanin)
         self._edges.append((fanin, idx))
 
-    def add_const0(self, name:str):
+    def add_const0(self, old_id:str, old_name:str):
         idx = 0
-        node = Node.make_const0(name, idx)
+        node = Node.make_const0(old_id, idx)
         self._const0 = node
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_pi(self, name:str):
+    def add_pi(self, old_id:str, old_name:str):
         idx = len(self._nodes)
-        node = Node.make_pi(name, idx)
-        self._pis.append(name)
+        node = Node.make_pi(old_id, idx)
+        self._pis.append(old_id)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_po(self, name:str, fanins:list = []):
+    def add_po(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_po(name, idx, fanins)
+        node = Node.make_po(old_id, idx, fanins)
         self._pos.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
     
-    def add_gate(self, type_node:str, name:str, fanins:list = []):
+    def add_gate(self, type_node:str, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_node(type_node, name, idx, fanins)
+        node = Node.make_node(type_node, old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_inverter(self, name:str, fanins:list = []):
+    def add_inverter(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_inverter(name, idx, fanins)
+        node = Node.make_inverter(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_and2(self, name:str, fanins:list = []):
+    def add_and2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_and2(name, idx, fanins)
+        node = Node.make_and2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_nand2(self, name:str, fanins:list = []):
+    def add_nand2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_nand2(name, idx, fanins)
+        node = Node.make_nand2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_or2(self, name:str, fanins:list = []):
+    def add_or2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_or2(name, idx, fanins)
+        node = Node.make_or2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_nor2(self, name:str, fanins:list = []):
+    def add_nor2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_nor2(name, idx, fanins)
+        node = Node.make_nor2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_xnor2(self, name:str, fanins:list = []):
+    def add_xnor2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_xnor2(name, idx, fanins)
+        node = Node.make_xnor2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_xor2(self, name:str, fanins:list = []):
+    def add_xor2(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_xor2(name, idx, fanins)
+        node = Node.make_xor2(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_maj3(self, name:str, fanins:list = []):
+    def add_maj3(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_maj3(name, idx, fanins)
+        node = Node.make_maj3(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_xor3(self, name:str, fanins:list = []):
+    def add_xor3(self, old_id:str, old_name:str, fanins:list = []):
         idx = len(self._nodes)
-        node = Node.make_xor3(name, idx, fanins)
+        node = Node.make_xor3(old_id, idx, fanins)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
-    def add_cell(self, name:str, fanins:list = [], physics:Physics=None):
+    def add_cell(self, old_id:str, old_name:str, fanins:list = [], physics:Physics=None):
         idx = len(self._nodes)
-        node = Node.make_cell(name, idx, fanins, physics)
+        node = Node.make_cell(old_id, idx, fanins, physics)
         self._gates.append(node)
         self._nodes.append(node)
-        self._names[name] = idx
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
         return idx
 
     def foreach_pi(self, func):
@@ -259,6 +274,9 @@ class Circuit(object):
 
     def to_torch_geometric(self):
         return Data(x=self.get_node_features(), edge_index=self.get_edge_index())
+
+    def to_graphviz(self, file):
+        pass
 
 if __name__ == '__main__':
     aig = Circuit(Tag.str_ckt_aig())
