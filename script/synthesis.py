@@ -31,23 +31,43 @@ OptCmds_Aig = [
 
 OptCmds_Xag = [
     "refactor",
+    "refactor -z",
+    "refactor",
+    "refactor -z",
     "rewrite",
-    "resub",
-    "balance"
-    "balance -m"
+    "rewrite -l",
+    "rewrite -z",
+    "rewrite -l -z",
+    "balance",
+    "balance",
+    "balance -m",
     "balance -f"
 ]
 
 OptCmds_Mig = [
     "refactor",
+    "refactor -z",
+    "refactor",
+    "refactor -z",
     "rewrite",
-    "resub"
+    "rewrite -l",
+    "rewrite -z",
+    "rewrite -l -z",
 ]
 
 OptCmds_Xmg = [
     "refactor",
+    "refactor -z",
+    "refactor",
+    "refactor -z",
     "rewrite",
-    "resub"
+    "rewrite -l",
+    "rewrite -z",
+    "rewrite -l -z",
+    "resub",
+    "resub -l",
+    "resub -z",
+    "resub -l -z",
 ]
         
 def gen_gaussian_numbers(rang:int, size:int):
@@ -159,6 +179,9 @@ class Synthesis(object):
         for design in designs:
             basename = os.path.basename(design)
             filename = os.path.splitext(basename)[0]
+            
+            print("process at: ", filename)
+            
             target_folder = os.path.join(self.params.folder_target(), filename)
             os.makedirs(target_folder, exist_ok=True)
             self.recipe_one_design(design, filename, target_folder)
@@ -208,33 +231,39 @@ class Synthesis(object):
         
         types_ckt = ["aig", "xag", "mig", "xmg"]
         for ckt in types_ckt:
+            print(ckt)
             folder_curr = os.path.join(target_folder, ckt)
             os.makedirs(folder_curr, exist_ok=True)
             
             for i in range(self.params.recipe_times()):
+                print("recipe {0}".format(i))
                 file_script = os.path.join(folder_curr, "recipe_{0}.script".format(i))
                 file_logic = os.path.join(folder_curr, "recipe_{0}.logic.graphml".format(i))
                 file_netlist = os.path.join(folder_curr, "recipe_{0}.netlist.graphml".format(i))
+                file_physics = os.path.join(folder_curr, "recipe_{0}.physics.graphml".format(i))
                 file_gdsii = os.path.join(folder_curr, "recipe_{0}.gdsii".format(i))
-                script = "start; "
+                
+                script = "start; anchor -set lsils; ntktype -tool lsils -type logic -ntk gtg; read_gtech -file {0};".format(design_in)
                 
                 # logic optimization
                 if ckt == "aig":
-                    script += "anchor -set abc; ntktype -tool abc -type strash -ntk aig; read_gtech -file {0};".format(design_in)
+                    script += "anchor -set abc; ntktype -tool abc -type strash -ntk aig; strash;"
                     opt_sequence = gen_opt_sequence(OptCmds_Aig)
                     script += opt_sequence
                 elif ckt == "xag":
-                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk xag; read_gtech -file {0};".format(design_in)
+                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk xag; strash;"
                     opt_sequence = gen_opt_sequence(OptCmds_Xag)
                     script += opt_sequence
                 elif ckt == "mig":
-                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk mig; read_gtech -file {0};".format(design_in)
+                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk mig; strash;"
                     opt_sequence = gen_opt_sequence(OptCmds_Mig)
                     script += opt_sequence
                 elif ckt == "xmg":
-                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk xmg; read_gtech -file {0};".format(design_in)
+                    script += "anchor -set lsils; ntktype -tool lsils -type strash -ntk xmg; strash;"
                     opt_sequence = gen_opt_sequence(OptCmds_Xmg)
                     script += opt_sequence
+                
+                # write the logic network
                 script += "write_graphml -file {0};".format(file_logic)
                 
                 # technology mapping
@@ -243,9 +272,11 @@ class Synthesis(object):
                 else:
                     script += "anchor -set lsils; read_genlib {0}; map_asic; write_graphml -file {1};".format(self.params.lib_techmap_genlib(), file_netlist)
                 
-                # physics design
-                script += "anchor -set ieda; logic2netlist; config -file {0}; \
-                          init; sta; floorplan; placement; cts; routing; write_gdsii -file {1}; stop;".format(self.params.config_ieda(), file_gdsii)
+                # # physics design
+                # # TODO: store the physics information
+                # script += "anchor -set ieda; logic2netlist; config -file {0}; \
+                #           init; sta; floorplan; placement; cts; routing; write_gdsii -file {1}; stop;".format(self.params.config_ieda(), file_gdsii)
+
                 cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
                                               script)
                 # store the script
