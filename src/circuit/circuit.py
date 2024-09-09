@@ -7,15 +7,12 @@ import torch
 from torch_geometric.data import Data
 
 from src.circuit.tag import Tag
-from src.circuit.node import Node, Physics
+from src.circuit.node import Node
     
 class Circuit(object):
     """
     """
-    def __init__(self, type_ckt:str):
-        if type_ckt not in Tag.tags_circuit():
-            raise ValueError("Invalid circuit type")
-        self._type = type_ckt
+    def __init__(self):
         self._const0 = None # constant 0
         self._pis : list[Node]  = []      # primary input nodes: inputs
         self._pos : list[Node]  = []      # primary output nodes
@@ -28,9 +25,6 @@ class Circuit(object):
         # attributes
         self._depths = []
         self._depth:int = 0
-
-    def get_type(self):
-        return self._type
     
     def node_at(self, idx:int) -> Node:
         return self._nodes[idx]
@@ -41,151 +35,323 @@ class Circuit(object):
         idx = self._node_map[old_id]
         return self._nodes[idx]
     
-    def is_gtech(self):
-        return self._type == Tag.str_ckt_gtech()
-    
-    def is_aig(self):
-        return self._type == Tag.str_ckt_aig()
-
-    def is_xag(self):
-        return self._type == Tag.str_ckt_xag()
-    
-    def is_xmg(self):
-        return self._type == Tag.str_ckt_xmg()
-    
-    def is_mig(self):
-        return self._type == Tag.str_ckt_mig()
-    
-    def is_xmg(self):
-        return self._type == Tag.str_ckt_xmg()
-    
-    def is_cell(self):
-        return self._type == Tag.str_ckt_cell()
-
     def add_fanin(self, idx:int, fanin:int):
         self._nodes[idx].add_fanin(fanin)
         self._edges.append((fanin, idx))
 
-    def add_const0(self, old_id:str, old_name:str):
+    def add_const0(self, old_id:str, old_name:str, truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
         idx = 0
-        node = Node.make_const0(old_id, idx)
+        node = Node.make_const0(old_id, idx, truthtable)
         self._const0 = node
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_pi(self, old_id:str, old_name:str):
+    def add_const1(self, old_id:str, old_name:str, truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
+        idx = 0
+        node = Node.make_const1(old_id, idx, truthtable)
+        self._const0 = node
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_pi(self, old_id:str, old_name:str, truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_pi(old_id, idx)
+        node = Node.make_pi(old_id, idx, truthtable)
         self._pis.append(old_id)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_po(self, old_id:str, old_name:str, fanins:list = []):
+    def add_po(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_po(old_id, idx, fanins)
+        node = Node.make_po(old_id, idx, fanins, truthtable)
         self._pos.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
     
-    def add_gate(self, type_node:str, old_id:str, old_name:str, fanins:list = []):
+    def add_gate(self, type_node:str, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_node(type_node, old_id, idx, fanins)
+        node = Node.make_node(type_node, old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_inverter(self, old_id:str, old_name:str, fanins:list = []):
+    def add_inverter(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_inverter(old_id, idx, fanins)
+        node = Node.make_inverter(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_and2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_and2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_and2(old_id, idx, fanins)
+        node = Node.make_and2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_nand2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_nand2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_nand2(old_id, idx, fanins)
+        node = Node.make_nand2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_or2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_or2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_or2(old_id, idx, fanins)
+        node = Node.make_or2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_nor2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_nor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_nor2(old_id, idx, fanins)
+        node = Node.make_nor2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_xnor2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_xnor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_xnor2(old_id, idx, fanins)
+        node = Node.make_xnor2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_xor2(self, old_id:str, old_name:str, fanins:list = []):
+    def add_xor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_xor2(old_id, idx, fanins)
+        node = Node.make_xor2(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_maj3(self, old_id:str, old_name:str, fanins:list = []):
+    def add_maj3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_maj3(old_id, idx, fanins)
+        node = Node.make_maj3(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_xor3(self, old_id:str, old_name:str, fanins:list = []):
+    def add_xor3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_xor3(old_id, idx, fanins)
+        node = Node.make_xor3(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
         self._node_map[old_id] = idx
         return idx
 
-    def add_cell(self, old_id:str, old_name:str, fanins:list = [], physics:Physics=None):
+    def add_nand3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
         idx = len(self._nodes)
-        node = Node.make_cell(old_id, idx, fanins, physics)
+        node = Node.make_nand3(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nor3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nor3(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_mux21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_mux21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nmux21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nmux21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_aoi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_aoi21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_oai21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_oai21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_axi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_axi21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_xai21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xai21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_oxi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_oxi21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_xoi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xoi21(old_id, idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._names.append(old_name)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_cell(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_cell(old_id, idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._names.append(old_name)
@@ -279,27 +445,27 @@ class Circuit(object):
         pass
 
 if __name__ == '__main__':
-    aig = Circuit(Tag.str_ckt_aig())
-    # constant
-    idx_const0 = aig.add_const0('const0')
-    # primary inputs
-    idx_a = aig.add_pi('a')
-    idx_b = aig.add_pi('b')
-    idx_c = aig.add_pi('c')
-    idx_d = aig.add_pi('d')
-    # internal gates
-    idx_g1 = aig.add_gate(Tag.str_node_and2(), 'g1', [idx_a, idx_b])
-    aig.add_fanin(idx_g1, idx_a)
-    aig.add_fanin(idx_g1, idx_b)
-    idx_g2 = aig.add_gate(Tag.str_node_and2(), 'g2', [idx_c, idx_d])
-    aig.add_fanin(idx_g2, idx_c)
-    aig.add_fanin(idx_g2, idx_d)
-    idx_g3 = aig.add_gate(Tag.str_node_and2(), 'g3', [idx_g1, idx_g2])
-    aig.add_fanin(idx_g3, idx_g1)
-    aig.add_fanin(idx_g3, idx_g2)
-    # primary outputs
-    idx_f = aig.add_po("f", [idx_g3])
-    aig.add_fanin(idx_f, idx_g3)
+    aig = Circuit()
+    # # constant
+    # idx_const0 = aig.add_const0('const0')
+    # # primary inputs
+    # idx_a = aig.add_pi('a')
+    # idx_b = aig.add_pi('b')
+    # idx_c = aig.add_pi('c')
+    # idx_d = aig.add_pi('d')
+    # # internal gates
+    # idx_g1 = aig.add_gate(Tag.str_node_and2(), 'g1', [idx_a, idx_b])
+    # aig.add_fanin(idx_g1, idx_a)
+    # aig.add_fanin(idx_g1, idx_b)
+    # idx_g2 = aig.add_gate(Tag.str_node_and2(), 'g2', [idx_c, idx_d])
+    # aig.add_fanin(idx_g2, idx_c)
+    # aig.add_fanin(idx_g2, idx_d)
+    # idx_g3 = aig.add_gate(Tag.str_node_and2(), 'g3', [idx_g1, idx_g2])
+    # aig.add_fanin(idx_g3, idx_g1)
+    # aig.add_fanin(idx_g3, idx_g2)
+    # # primary outputs
+    # idx_f = aig.add_po("f", [idx_g3])
+    # aig.add_fanin(idx_f, idx_g3)
     
-    torch_data = aig.to_torch_geometric()
-    print(torch_data)
+    # torch_data = aig.to_torch_geometric()
+    # print(torch_data)

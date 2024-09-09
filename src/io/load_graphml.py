@@ -11,53 +11,75 @@ from src.circuit.node import Node
 from src.circuit.circuit import Circuit
 
 
-def load_graphml(filename:str, type_ckt:str) -> Circuit:
+def load_graphml(filename:str) -> Circuit:
     """
     Load a graphml file and return a LogicGraph/CellGraph object
     :param filename: the name of the file to load
     :return: a LogicGraph object
     """
-    if type_ckt not in Tag.tags_circuit():
-        raise ValueError("Invalid circuit type")
-
     raw_graph = nx.read_graphml(filename)
-    circuit = Circuit(type_ckt)
+    circuit = Circuit()
     
     # only add the nodes, leave the fanins alone
     for id, attr in raw_graph.nodes(data=True):
         node_type = attr.get('type')
+        node_func = attr.get('func')
         assert node_type in Tag.tags_node(), f"Invalid node type: {node_type}"
 
         node_id = str(id)
         node_name = attr.get('name')
-        if node_type == Tag.str_node_const0():
-            circuit.add_const0(node_id, node_name)
+        if node_type in Tag.str_all_const0():
+            circuit.add_const0(node_id, node_name, node_func)
+        elif node_type in Tag.str_node_const1():
+            circuit.add_const1(node_id, node_name, node_func)
         elif node_type == Tag.str_node_pi():
-            circuit.add_pi(node_id, node_name)
-        elif node_type == Tag.str_node_inverter():
-            circuit.add_inverter(node_id, node_name)
-        elif node_type == Tag.str_node_and2():
-            circuit.add_and2(node_id, node_name)
-        elif node_type == Tag.str_node_or2():
-            circuit.add_or2(node_id, node_name)
-        elif node_type == Tag.str_node_xor2():
-            circuit.add_xor2(node_id, node_name)
-        elif node_type == Tag.str_node_nand2():
-            circuit.add_nand2(node_id, node_name)
-        elif node_type == Tag.str_node_nor2():
-            circuit.add_nor2(node_id, node_name)
-        elif node_type == Tag.str_node_xnor2():
-            circuit.add_xnor2(node_id, node_name)
-        elif node_type == Tag.str_node_maj3():
-            circuit.add_maj3(node_id, node_name)
-        elif node_type == Tag.str_node_xor3():
-            circuit.add_xor3(node_id, node_name)
-        elif node_type == Tag.str_node_cell():
-            circuit.add_cell(node_id, node_name)
+            circuit.add_pi(node_id, node_name, node_func)
         elif node_type == Tag.str_node_po():
-            circuit.add_po(node_id, node_name)
-        else:
-            raise ValueError(f"Invalid node type: {node_type}")
+            circuit.add_po(node_id, node_name, node_func)
+        # logic gates
+        elif node_type == Tag.str_node_inv():
+            circuit.add_inverter(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_buf():
+            circuit.add_inverter(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_and2():
+            circuit.add_and2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_or2():
+            circuit.add_or2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_xor2():
+            circuit.add_xor2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_nand2():
+            circuit.add_nand2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_nor2():
+            circuit.add_nor2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_xnor2():
+            circuit.add_xnor2(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_maj3():
+            circuit.add_maj3(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_xor3():
+            circuit.add_xor3(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_nand3():
+            circuit.add_nand3(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_nor3():
+            circuit.add_nor3(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_mux21():
+            circuit.add_mux21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_nmux21():
+            circuit.add_nmux21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_aoi21():
+            circuit.add_aoi21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_oai21():
+            circuit.add_oai21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_axi21():
+            circuit.add_axi21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_xai21():
+            circuit.add_xai21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_oxi21():
+            circuit.add_oxi21(node_id, node_name, node_func)
+        elif node_type == Tag.str_node_xoi21():
+            circuit.add_xoi21(node_id, node_name, node_func)
+        # standard cell / LUT
+        else:   
+            circuit.add_cell(node_id, node_name, node_func)
     
     # add the edges
     for source, target, attr in raw_graph.edges(data=True):
@@ -70,8 +92,7 @@ def load_graphml(filename:str, type_ckt:str) -> Circuit:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Load a graphml file and return a LogicGraph/CellGraph object')
     parser.add_argument('--file', type=str, help='the name of the file to load')
-    parser.add_argument('--type', type=str, help='the type of circuit to load')
     args = parser.parse_args()
 
-    circuit = load_graphml(args.file, args.type)
+    circuit = load_graphml(args.file)
     print(circuit.to_torch_geometric())
