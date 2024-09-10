@@ -206,17 +206,26 @@ class Node(object):
     def get_idx(self):
         return self._idx
     
+    def set_type(self, type_node:str):
+        self._type = type_node
+
     def get_type(self):
         return self._type
-
+    
     def add_fanin(self, fanin:int):
         self._fanins.append(fanin)
-
+    
+    def set_fanins(self, fanins:list):
+        self._fanins = fanins
+    
     def get_fanins(self):
         return self._fanins
-    
-    def get_physics(self):
-        return self._physics
+
+    def set_truthtable(self, truthtable:str):
+        self._truthtable = truthtable
+        
+    def get_truthtable(self):
+        return self._truthtable
 
 class NodeTypeEnum(Enum):
     """_summary_
