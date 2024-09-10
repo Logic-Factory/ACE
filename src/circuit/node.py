@@ -4,7 +4,7 @@ proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
 from src.circuit.tag import Tag
-from enum import Enum
+from enum import Enum, auto
 
 class Node(object):
     """ Logic Node in the Logic circuit graph
@@ -224,58 +224,59 @@ class NodeTypeEnum(Enum):
     Args:
         enumerate (_type_): _description_
     """
-    CONST0 = 0
-    CONST1 = 1
-    PI = 2
-    PO = 3
+    CONST0 = auto()
+    CONST1 = auto()
+    PI     = auto()
+    PO     = auto()
     # LOGIC GATES
-    INVERTER = 4
-    AND2 = 5
-    NAND2 = 6
-    OR2 = 7
-    NOR2 = 8
-    XOR2 = 9
-    XNOR2 = 10
-    MAJ3 = 11
-    XOR3 = 12
-    NAND3 = 13
-    NOR3 = 14
-    MUX21 = 15
-    NMUX21 = 16
-    AOI21 = 17
-    OAI21 = 18
-    AXI21 = 19
-    XAI21 = 20
-    OXI21 = 21
-    XOI21 = 22
+    INVERTER = auto()
+    BUFFER   = auto()
+    AND2     = auto()
+    NAND2    = auto()
+    OR2      = auto()
+    NOR2     = auto()
+    XOR2     = auto()
+    XNOR2    = auto()
+    MAJ3     = auto()
+    XOR3     = auto()
+    NAND3    = auto()
+    NOR3     = auto()
+    MUX21    = auto()
+    NMUX21   = auto()
+    AOI21    = auto()
+    OAI21    = auto()
+    AXI21    = auto()
+    XAI21    = auto()
+    OXI21    = auto()
+    XOI21    = auto()
     # TECH GATES
-    CELL = 23
+    CELL     = auto()
     
     @staticmethod
     def node_domains():
-        domains = {Tag.str_node_const0():NodeTypeEnum.CONST0,
-                   Tag.str_node_pi():NodeTypeEnum.PI,
-                   Tag.str_node_po():NodeTypeEnum.PO,
-                   Tag.str_node_inv():NodeTypeEnum.INVERTER,
-                   Tag.str_node_and2():NodeTypeEnum.AND2,
-                   Tag.str_node_nand2():NodeTypeEnum.NAND2,
-                   Tag.str_node_or2():NodeTypeEnum.OR2,
-                   Tag.str_node_nor2():NodeTypeEnum.NOR2,
-                   Tag.str_node_xor2():NodeTypeEnum.XOR2,
-                   Tag.str_node_xnor2():NodeTypeEnum.XNOR2,
-                   Tag.str_node_maj3():NodeTypeEnum.MAJ3,
-                   Tag.str_node_xor3():NodeTypeEnum.XOR3,
-                   Tag.str_node_nand3():NodeTypeEnum.NAND3,
-                   Tag.str_node_nor3():NodeTypeEnum.NOR3,
-                   Tag.str_node_mux21():NodeTypeEnum.MUX21,
-                   Tag.str_node_nmux21():NodeTypeEnum.NMUX21,
-                   Tag.str_node_aoi21():NodeTypeEnum.AOI21,
-                   Tag.str_node_oai21():NodeTypeEnum.OAI21,
-                   Tag.str_node_axi21():NodeTypeEnum.AXI21,
-                   Tag.str_node_xai21():NodeTypeEnum.XAI21,
-                   Tag.str_node_oxi21():NodeTypeEnum.OXI21,
-                   Tag.str_node_xoi21():NodeTypeEnum.XOI21,                   
-                   Tag.str_node_cell():NodeTypeEnum.CELL
+        domains = {Tag.str_node_const0():NodeTypeEnum.CONST0.value,
+                   Tag.str_node_pi():NodeTypeEnum.PI.value,
+                   Tag.str_node_po():NodeTypeEnum.PO.value,
+                   Tag.str_node_inv():NodeTypeEnum.INVERTER.value,
+                   Tag.str_node_and2():NodeTypeEnum.AND2.value,
+                   Tag.str_node_nand2():NodeTypeEnum.NAND2.value,
+                   Tag.str_node_or2():NodeTypeEnum.OR2.value,
+                   Tag.str_node_nor2():NodeTypeEnum.NOR2.value,
+                   Tag.str_node_xor2():NodeTypeEnum.XOR2.value,
+                   Tag.str_node_xnor2():NodeTypeEnum.XNOR2.value,
+                   Tag.str_node_maj3():NodeTypeEnum.MAJ3.value,
+                   Tag.str_node_xor3():NodeTypeEnum.XOR3.value,
+                   Tag.str_node_nand3():NodeTypeEnum.NAND3.value,
+                   Tag.str_node_nor3():NodeTypeEnum.NOR3.value,
+                   Tag.str_node_mux21():NodeTypeEnum.MUX21.value,
+                   Tag.str_node_nmux21():NodeTypeEnum.NMUX21.value,
+                   Tag.str_node_aoi21():NodeTypeEnum.AOI21.value,
+                   Tag.str_node_oai21():NodeTypeEnum.OAI21.value,
+                   Tag.str_node_axi21():NodeTypeEnum.AXI21.value,
+                   Tag.str_node_xai21():NodeTypeEnum.XAI21.value,
+                   Tag.str_node_oxi21():NodeTypeEnum.OXI21.value,
+                   Tag.str_node_xoi21():NodeTypeEnum.XOI21.value,                   
+                   Tag.str_node_cell():NodeTypeEnum.CELL.value
                    }
         return domains
     
