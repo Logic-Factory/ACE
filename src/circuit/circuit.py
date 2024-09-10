@@ -7,18 +7,17 @@ import torch
 from torch_geometric.data import Data
 
 from src.circuit.tag import Tag
-from src.circuit.node import Node
+from src.circuit.node import Node, NodeTypeEnum
     
 class Circuit(object):
     """
     """
     def __init__(self):
-        self._const0 = None # constant 0
+        self._consts : list[Node]  = []   # constant nodes: 0 and 1
         self._pis : list[Node]  = []      # primary input nodes: inputs
         self._pos : list[Node]  = []      # primary output nodes
         self._gates : list[Node]  = []    # internal logic nodes
         self._nodes : list[Node] = []     # all nodes: pis + gates + pos
-        self._names : list[Node] = []     # store the name of each node
         self._node_map = {}               # [key, value], key is the index in old ckt, value is the index in self._nodes
         self._edges = []                  # store the edges of the circuit
         
@@ -26,6 +25,298 @@ class Circuit(object):
         self._depths = []
         self._depth:int = 0
     
+    #########################################
+    #   logic/cell nodes
+    #########################################
+    def add_const0(self, old_id:str,  truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_const0(idx, truthtable)
+        self._consts.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_const1(self, old_id:str,  truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_const1(idx, truthtable)
+        self._consts.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_pi(self, old_id:str,  truthtable:str=None):
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_pi(idx, truthtable)
+        self._pis.append(old_id)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_po(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_po(idx, fanins, truthtable)
+        self._pos.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_inverter(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_inverter(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_and2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_and2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nand2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nand2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_or2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_or2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nor2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nor2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_xnor2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xnor2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_xor2(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xor2(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_maj3(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_maj3(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_xor3(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xor3(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nand3(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nand3(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nor3(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nor3(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_mux21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_mux21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_nmux21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_nmux21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_aoi21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_aoi21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_oai21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_oai21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_axi21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_axi21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_xai21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xai21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_oxi21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_oxi21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_xoi21(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_xoi21(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
+    def add_cell(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_cell(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+    
+    def add_fanin(self, idx:int, fanin:int):
+        self._nodes[idx].add_fanin(fanin)
+        self._edges.append((fanin, idx))
+
+    #########################################
+    #   access
+    #########################################        
     def node_at(self, idx:int) -> Node:
         return self._nodes[idx]
     
@@ -34,330 +325,10 @@ class Circuit(object):
             raise ValueError("Invalid node old_id")
         idx = self._node_map[old_id]
         return self._nodes[idx]
-    
-    def add_fanin(self, idx:int, fanin:int):
-        self._nodes[idx].add_fanin(fanin)
-        self._edges.append((fanin, idx))
 
-    def add_const0(self, old_id:str, old_name:str, truthtable:str=None):
-        if truthtable is None:
-            truthtable = ''
-        idx = 0
-        node = Node.make_const0(old_id, idx, truthtable)
-        self._const0 = node
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_const1(self, old_id:str, old_name:str, truthtable:str=None):
-        if truthtable is None:
-            truthtable = ''
-        idx = 0
-        node = Node.make_const1(old_id, idx, truthtable)
-        self._const0 = node
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_pi(self, old_id:str, old_name:str, truthtable:str=None):
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_pi(old_id, idx, truthtable)
-        self._pis.append(old_id)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_po(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_po(old_id, idx, fanins, truthtable)
-        self._pos.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_gate(self, type_node:str, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_node(type_node, old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_inverter(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_inverter(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_and2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_and2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_nand2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_nand2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_or2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_or2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_nor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_nor2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_xnor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xnor2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_xor2(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xor2(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_maj3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_maj3(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_xor3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xor3(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_nand3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_nand3(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_nor3(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_nor3(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_mux21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_mux21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_nmux21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_nmux21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_aoi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_aoi21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_oai21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_oai21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_axi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_axi21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_xai21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xai21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_oxi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_oxi21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_xoi21(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xoi21(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_cell(self, old_id:str, old_name:str, fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_cell(old_id, idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._names.append(old_name)
-        self._node_map[old_id] = idx
-        return idx
-
+    #########################################
+    #   foreach
+    #########################################
     def foreach_pi(self, func):
         for node in self._pis:
             func(node)
@@ -378,19 +349,9 @@ class Circuit(object):
         for fanin in node.get_fanins():
             func(self.node_at(fanin))
 
-    def cal_depths(self):
-        """ calculate the depth of the circuit
-        """
-        self._depths = [0] * len(self._nodes)
-        
-        for idx in range(len(self._nodes)):
-            max_depth = 0
-            def update_depth(node:Node):
-                nonlocal max_depth
-                max_depth = max(max_depth, self._depths[node.get_idx()] + 1)
-            self.foreach_fanin(self._nodes[idx], update_depth)
-            self._depths[idx] = max_depth
-
+    #########################################
+    #   stats
+    #########################################
     def num_pis(self):
         return len(self._pis)
 
@@ -406,11 +367,26 @@ class Circuit(object):
     def num_edges(self):
         return sum([len(node.get_fanins()) for node in self._nodes])
 
+    #########################################
+    #   operator
+    #########################################
+    def cal_depths(self):
+        """ calculate the depth of the circuit
+        """
+        self._depths = [0] * len(self._nodes)
+        
+        for idx in range(len(self._nodes)):
+            max_depth = 0
+            def update_depth(node:Node):
+                nonlocal max_depth
+                max_depth = max(max_depth, self._depths[node.get_idx()] + 1)
+            self.foreach_fanin(self._nodes[idx], update_depth)
+            self._depths[idx] = max_depth
+
     def init_node_feature(self, type_node:str, size:int = 0):
-        # TODO: use different node embedding method for different circuit type
         if type_node not in Tag.tags_node():
             raise ValueError("Invalid node type")
-        domains = Node.node_domains()
+        domains = NodeTypeEnum.node_domains()
         node_feature = []
         if size == 0 or size >= len(Tag.tags_node()):
             node_feature = [0] * len(domains)
