@@ -154,10 +154,11 @@ class Synthesis(object):
             step4: technology mapping
             step5: physics design
         """
+        # get the raw gtech first
         file_gtech = self.apply_gtech_tans(design, filename, target_folder)
+        # synthesis the sequence and internal designs
         self.apply_physics_synthesis(file_gtech, target_folder)
 
-    
     def apply_gtech_tans(self, desgin, filename, target_folder):
         """ translate the design to gtech format
         """
@@ -233,8 +234,7 @@ class Synthesis(object):
                 
                 # physics design
                 # TODO: store the physics information
-                script += "anchor -set ieda; logic2asic; config -file {0}; \
-                          init; sta; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
+                script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
                 script += "stop;"
                 
                 cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
@@ -289,8 +289,7 @@ class Synthesis(object):
                 
                 # physics design
                 # TODO: store the physics information
-                script += "anchor -set ieda; logic2asic; config -file {0}; \
-                          init; sta; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
+                script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
 
                 script += "stop;"
                 
