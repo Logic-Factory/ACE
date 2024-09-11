@@ -182,6 +182,43 @@ class Synthesis(object):
             3. technology mapping
             4. physics design
         """
+       
+        logics_root = ["abc"]
+        logics_aux = ["aig", "oig", "aog", "xag", "xog", "primary", "mig", "xmg", "gtg"]
+        aigs_synthesised = []
+        for logic_root in logics_root:
+            folder_aig = os.path.join(target_folder, logic_root)
+            os.makedirs(folder_aig, exist_ok=True)
+            
+            with ThreadPoolExecutor() as executor:
+                futures = []
+                for i in range( self.params.recipe_times()):
+                    # make sure the logic_aux is corresponding to root aig
+                    file_logic_aig = os.path.join(folder_aig, "recipe_{0}.logic.aig".format(i))
+                    aigs_synthesised.append(file_logic_aig)
+                    future = executor.submit(self.process_logic_root, design_in, i, folder_aig)
+                    futures.append(future)
+                
+                for future in tqdm( futures, desc= "abc ing"):
+                    future.result()
+                
+        # Boolean representation
+        for logic_aux in logics_aux:
+    
+            folder_logic = os.path.join(target_folder, logic_aux)
+            os.makedirs(folder_logic, exist_ok=True)
+            with ThreadPoolExecutor() as executor:
+                futures = []
+                for i in range( len(aigs_synthesised) ):
+                    future = executor.submit(self.process_logic_aux, aigs_synthesised, i, logic_aux, folder_logic)
+                    futures.append(future)
+
+                for future in tqdm( futures, desc= logic_aux + " ing"):
+                    future.result()
+        return
+
+    def process_logic_root(self, design_in, index, folder_root):
+        
         def gen_opt_sequence(cmds:list):
             numbers = gen_gaussian_numbers(len(cmds), self.params.recipe_length())
             sequence = ""
@@ -189,118 +226,100 @@ class Synthesis(object):
                 sequence += cmds[number] + ";"
             return sequence
         
-        logics_root = ["abc"]
-        logics_aux = ["aig", "oig", "aog", "xag", "xog", "primary", "mig", "xmg", "gtg"]
-        aigs_synthesised = []
-        for logic_root in logics_root:
-            print(logic_root)
-            folder_aig = os.path.join(target_folder, logic_root)
-            os.makedirs(folder_aig, exist_ok=True)
+        file_script = os.path.join(folder_root, "recipe_{0}.script".format(index))
+        file_logic = os.path.join(folder_root, "recipe_{0}.logic.v".format(index))
+        file_logic_aig = os.path.join(folder_root, "recipe_{0}.logic.aig".format(index))
+        file_logic_graphml = os.path.join(folder_root, "recipe_{0}.logic.graphml".format(index))
+        file_logic_dot = os.path.join(folder_root, "recipe_{0}.logic.dot".format(index))
+        file_logic_qor = os.path.join(folder_root, "recipe_{0}.logic.qor.json".format(index))
+        file_fpga = os.path.join(folder_root, "recipe_{0}.fpga.v".format(index))
+        file_fpga_graphml = os.path.join(folder_root, "recipe_{0}.fpga.graphml".format(index))
+        file_fpga_dot = os.path.join(folder_root, "recipe_{0}.fpga.dot".format(index))
+        file_fpga_qor = os.path.join(folder_root, "recipe_{0}.fpga.qor.json".format(index))
+        file_asic = os.path.join(folder_root, "recipe_{0}.asic.v".format(index))
+        file_asic_graphml = os.path.join(folder_root, "recipe_{0}.asic.graphml".format(index))
+        file_asic_dot = os.path.join(folder_root, "recipe_{0}.asic.dot".format(index))
+        file_asic_qor = os.path.join(folder_root, "recipe_{0}.asic.qor.json".format(index))
+        # physics QoR
+        file_physics_qor = os.path.join(folder_root, "recipe_{0}.physics.qor.json".format(index))    # asic timing / area
+        
+        script = "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; ".format(design_in)
+        
+        # logic optimization
+        script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
+        script += gen_opt_sequence(OptCmds_Aig)
+        
+        # write the logic network
+        script += " write_dot -file {0}; write_graphml -file {1}; write_aiger -file {2}; write_verilog -file {3}; print_stats -file {4};".format( file_logic_dot, file_logic_graphml, file_logic_aig, file_logic, file_logic_qor)
+        
+        # set the anchor
+        script += "anchor -tool abc; "
+        
+        # technology mapping
+        script +=  "ntktype -tool abc -stat strash -type aig; strash; map_fpga; ntktype -tool abc -stat netlist -type fpga; write_dot -file {0}; write_graphml -file {1}; write_verilog -K 6 -f -file {2};  print_stats -file {3};".format( file_fpga_dot, file_fpga_graphml, file_fpga, file_fpga_qor)
+        script +=  "ntktype -tool abc -stat strash -type aig; strash; read_genlib {0}; map_asic; ntktype -tool abc -stat netlist -type asic; write_dot -file {1}; write_graphml -file {2}; write_verilog -file {3};  print_stats -file {4}; ".format(self.params.lib_techmap_genlib(), file_asic_dot, file_asic_graphml, file_asic, file_asic_qor)
+        
+        # physics design
+        # TODO: store the physics information
+        script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
+        script += "stop;"
+        
+        cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
+                                    script)
+        # store the script
+        with open(file_script, "w") as f:
+            f.write(cmd)
+        log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-            for i in range(self.params.recipe_times()):
-                file_script = os.path.join(folder_aig, "recipe_{0}.script".format(i))
-                file_logic = os.path.join(folder_aig, "recipe_{0}.logic.v".format(i))
-                file_logic_aig = os.path.join(folder_aig, "recipe_{0}.logic.aig".format(i))
-                file_logic_graphml = os.path.join(folder_aig, "recipe_{0}.logic.graphml".format(i))
-                file_logic_dot = os.path.join(folder_aig, "recipe_{0}.logic.dot".format(i))
-                file_logic_qor = os.path.join(folder_aig, "recipe_{0}.logic.qor.json".format(i))
-                file_fpga = os.path.join(folder_aig, "recipe_{0}.fpga.v".format(i))
-                file_fpga_graphml = os.path.join(folder_aig, "recipe_{0}.fpga.graphml".format(i))
-                file_fpga_dot = os.path.join(folder_aig, "recipe_{0}.fpga.dot".format(i))
-                file_fpga_qor = os.path.join(folder_aig, "recipe_{0}.fpga.qor.json".format(i))
-                file_asic = os.path.join(folder_aig, "recipe_{0}.asic.v".format(i))
-                file_asic_graphml = os.path.join(folder_aig, "recipe_{0}.asic.graphml".format(i))
-                file_asic_dot = os.path.join(folder_aig, "recipe_{0}.asic.dot".format(i))
-                file_asic_qor = os.path.join(folder_aig, "recipe_{0}.asic.qor.json".format(i))
-                # physics QoR
-                file_physics_qor = os.path.join(folder_aig, "recipe_{0}.physics.qor.json".format(i))    # asic timing / area
-                
-                script = "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; ".format(design_in)
-                
-                # logic optimization
-                script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
-                script += gen_opt_sequence(OptCmds_Aig)
 
-                
-                # write the logic network
-                script += " write_dot -file {0}; write_graphml -file {1}; write_aiger -file {2}; write_verilog -file {3}; print_stats -file {4};".format( file_logic_dot, file_logic_graphml, file_logic_aig, file_logic, file_logic_qor)
-                
-                # set the anchor
-                script += "anchor -tool abc; "
-                
-                # technology mapping
-                script +=  "ntktype -tool abc -stat strash -type aig; strash; map_fpga; ntktype -tool abc -stat netlist -type fpga; write_dot -file {0}; write_graphml -file {1}; write_verilog -K 6 -f -file {2};  print_stats -file {3};".format( file_fpga_dot, file_fpga_graphml, file_fpga, file_fpga_qor)
-                script +=  "ntktype -tool abc -stat strash -type aig; strash; read_genlib {0}; map_asic; ntktype -tool abc -stat netlist -type asic; write_dot -file {1}; write_graphml -file {2}; write_verilog -file {3};  print_stats -file {4}; ".format(self.params.lib_techmap_genlib(), file_asic_dot, file_asic_graphml, file_asic, file_asic_qor)
-                
-                # physics design
-                # TODO: store the physics information
-                script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
-                script += "stop;"
-                
-                cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
-                                              script)
-                # store the script
-                with open(file_script, "w") as f:
-                    f.write(cmd)
-                log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
-                aigs_synthesised.append(file_logic_aig)
-                
-        # Boolean representation
-        for logic_aux in logics_aux:
-            print(logic_aux)
-            folder_logic = os.path.join(target_folder, logic_aux)
-            os.makedirs(folder_logic, exist_ok=True)
-            
-            for i in range( len(aigs_synthesised) ):                
-                aig_curr = aigs_synthesised[i]
-                
-                file_script = os.path.join(folder_logic, "recipe_{0}.script".format(i))
-                file_logic = os.path.join(folder_logic, "recipe_{0}.logic.v".format(i))
-                file_logic_graphml = os.path.join(folder_logic, "recipe_{0}.logic.graphml".format(i))
-                file_logic_dot = os.path.join(folder_logic, "recipe_{0}.logic.dot".format(i))
-                file_logic_qor = os.path.join(folder_logic, "recipe_{0}.logic.qor.json".format(i))
-                file_fpga = os.path.join(folder_logic, "recipe_{0}.fpga.v".format(i))
-                file_fpga_graphml = os.path.join(folder_logic, "recipe_{0}.fpga.graphml".format(i))
-                file_fpga_dot = os.path.join(folder_logic, "recipe_{0}.fpga.dot".format(i))
-                file_fpga_qor = os.path.join(folder_logic, "recipe_{0}.fpga.qor.json".format(i))
-                file_asic = os.path.join(folder_logic, "recipe_{0}.asic.v".format(i))
-                file_asic_graphml = os.path.join(folder_logic, "recipe_{0}.asic.graphml".format(i))
-                file_asic_dot = os.path.join(folder_logic, "recipe_{0}.asic.dot".format(i))
-                file_asic_qor = os.path.join(folder_logic, "recipe_{0}.asic.qor.json".format(i))
-                file_physics_qor = os.path.join(folder_logic, "recipe_{0}.physics.qor.json".format(i))    # asic timing / area
-                
-                script = "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type aig; read_aiger -file {0}; ".format(aig_curr)
-                if logic_aux == "mig" or logic_aux == "xmg":
-                    script += "convert -from {0} -to {1} -n; ".format("aig", logic_aux)
-                else:
-                    script += "convert -from {0} -to {1}; ".format("aig", logic_aux)
-                script += "ntktype -tool lsils -stat logic -type {0}; ".format(logic_aux)
-                                
-                # write the logic network
-                script += "write_dot -file {0}; write_graphml -file {1}; write_verilog -file {2}; print_stats -file {3};".format(file_logic_dot, file_logic_graphml, file_logic, file_logic_qor)
-                
-                # set the anchor
-                script += "anchor -tool lsils; strash; "
-                
-                # technology mapping
-                script +=  "ntktype -tool lsils -stat strash -type {0}; strash; map_fpga; ntktype -tool lsils -stat netlist -type fpga; write_dot -file {1}; write_graphml -file {2}; write_verilog -file {3}; print_stats -file {4};".format(logic_aux, file_fpga_dot, file_fpga_graphml, file_fpga, file_fpga_qor )
-                script +=  "ntktype -tool lsils -stat strash -type {0}; strash; read_genlib {1}; map_asic; ntktype -tool lsils -stat netlist -type asic; write_dot -file {2}; write_graphml -file {3}; write_verilog -file {4}; print_stats -file {5};".format(logic_aux, self.params.lib_techmap_genlib(), file_asic_dot, file_asic_graphml, file_asic, file_asic_qor)
-                
-                # physics design
-                # TODO: store the physics information
-                script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
+    def process_logic_aux(self, aigs, index, logic_aux, folder_aux):
+        aig_curr = aigs[index]
+        
+        file_script = os.path.join(folder_aux, "recipe_{0}.script".format(index))
+        file_logic = os.path.join(folder_aux, "recipe_{0}.logic.v".format(index))
+        file_logic_graphml = os.path.join(folder_aux, "recipe_{0}.logic.graphml".format(index))
+        file_logic_dot = os.path.join(folder_aux, "recipe_{0}.logic.dot".format(index))
+        file_logic_qor = os.path.join(folder_aux, "recipe_{0}.logic.qor.json".format(index))
+        file_fpga = os.path.join(folder_aux, "recipe_{0}.fpga.v".format(index))
+        file_fpga_graphml = os.path.join(folder_aux, "recipe_{0}.fpga.graphml".format(index))
+        file_fpga_dot = os.path.join(folder_aux, "recipe_{0}.fpga.dot".format(index))
+        file_fpga_qor = os.path.join(folder_aux, "recipe_{0}.fpga.qor.json".format(index))
+        file_asic = os.path.join(folder_aux, "recipe_{0}.asic.v".format(index))
+        file_asic_graphml = os.path.join(folder_aux, "recipe_{0}.asic.graphml".format(index))
+        file_asic_dot = os.path.join(folder_aux, "recipe_{0}.asic.dot".format(index))
+        file_asic_qor = os.path.join(folder_aux, "recipe_{0}.asic.qor.json".format(index))
+        file_physics_qor = os.path.join(folder_aux, "recipe_{0}.physics.qor.json".format(index))    # asic timing / area
+        
+        script = "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type aig; read_aiger -file {0}; ".format(aig_curr)
+        if logic_aux == "mig" or logic_aux == "xmg":
+            script += "convert -from {0} -to {1} -n; ".format("aig", logic_aux)
+        else:
+            script += "convert -from {0} -to {1}; ".format("aig", logic_aux)
+        script += "ntktype -tool lsils -stat logic -type {0}; ".format(logic_aux)
+                        
+        # write the logic network
+        script += "write_dot -file {0}; write_graphml -file {1}; write_verilog -file {2}; print_stats -file {3};".format(file_logic_dot, file_logic_graphml, file_logic, file_logic_qor)
+        
+        # set the anchor
+        script += "anchor -tool lsils; strash; "
+        
+        # technology mapping
+        script +=  "ntktype -tool lsils -stat strash -type {0}; strash; map_fpga; ntktype -tool lsils -stat netlist -type fpga; write_dot -file {1}; write_graphml -file {2}; write_verilog -file {3}; print_stats -file {4};".format(logic_aux, file_fpga_dot, file_fpga_graphml, file_fpga, file_fpga_qor )
+        script +=  "ntktype -tool lsils -stat strash -type {0}; strash; read_genlib {1}; map_asic; ntktype -tool lsils -stat netlist -type asic; write_dot -file {2}; write_graphml -file {3}; write_verilog -file {4}; print_stats -file {5};".format(logic_aux, self.params.lib_techmap_genlib(), file_asic_dot, file_asic_graphml, file_asic, file_asic_qor)
+        
+        # physics design
+        # TODO: store the physics information
+        script += "anchor -set ieda; logic2netlist; config -file {0}; init; sta; power; print_stats -file {1};".format(self.params.config_ieda(), file_physics_qor)
 
-                script += "stop;"
-                
-                cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
-                                              script)
-                # store the script
-                with open(file_script, "w") as f:
-                    f.write(cmd)
-                log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
-        return
+        script += "stop;"
+        
+        cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(),
+                                      script)
+        # store the script
+        with open(file_script, "w") as f:
+            f.write(cmd)
+        log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
 if __name__ == '__main__':    
     file = sys.argv[1]
