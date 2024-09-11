@@ -134,12 +134,14 @@ class Synthesis(object):
         self.params = params
         
     def run(self):
-        designs = glob.glob( os.path.join(self.params.folder_root(), '*.aig') )
+        designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)
+        count = 1
         for design in designs:
             basename = os.path.basename(design)
             filename = os.path.splitext(basename)[0]
             
-            print("process at: ", filename)
+            print("process at: ", filename, "   [", count, "/", len(designs), "]")
+            count += 1
             
             target_folder = os.path.join(self.params.folder_target(), filename)
             os.makedirs(target_folder, exist_ok=True)
@@ -182,7 +184,6 @@ class Synthesis(object):
             3. technology mapping
             4. physics design
         """
-       
         logics_root = ["abc"]
         logics_aux = ["aig", "oig", "aog", "xag", "xog", "primary", "mig", "xmg", "gtg"]
         aigs_synthesised = []
