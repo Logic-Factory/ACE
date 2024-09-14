@@ -96,6 +96,8 @@ class Checking(object):
         
     def run(self):
         designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)
+        if len(designs) == 0:
+            raise ValueError("No designs found!")
         count = 1
         lost_and_found = []
         for design in designs:
