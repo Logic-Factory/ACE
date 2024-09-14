@@ -2,3 +2,5 @@
 tmp/
 tool/
 *.pyc
+result/
+benchmark/
