@@ -144,9 +144,14 @@ class Synthesis(object):
     """
     def __init__(self, params:Params):
         self.params = params
+        self.gtech_synthesis = True
+        self.only_abc = False
+        self.top_model_name = "top_module"
         self.raw_gtech_name = "raw.gtech.v"
         
     def run(self):
+        # self.set_aig_synthesis()
+        # self.set_only_abc()
         designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)
         count = 1
         for design in designs:
@@ -158,10 +163,25 @@ class Synthesis(object):
             
             target_folder = os.path.join(self.params.folder_target(), filename)
             os.makedirs(target_folder, exist_ok=True)
-            self.recipe_one_design(design, filename, target_folder)
+            self.recipe_one_design(design, target_folder)
         return
 
-    def recipe_one_design(self, design, filename, target_folder):
+    def set_gtech_synthesis(self):
+        self.gtech_synthesis = True
+    
+    def set_aig_synthesis(self):
+        self.gtech_synthesis = False
+
+    def is_gtech_synthesis(self):
+        return self.gtech_synthesis
+    
+    def set_only_abc(self):
+        self.only_abc = True
+    
+    def is_only_abc(self):
+        return self.only_abc
+
+    def recipe_one_design(self, design, target_folder):
         """ synthesis the data of one design
             step1: generate the gtech representation of the given design
             step2: boolean representation
@@ -170,12 +190,12 @@ class Synthesis(object):
             step5: physics design
         """
         # get the raw gtech first
-        file_gtech = self.apply_gtech_tans(design, filename, target_folder)
-        # synthesis the sequence and internal designs
-        self.apply_physics_synthesis(file_gtech, target_folder)
-        # checking whether all this file are generated
+        file_logic = design
+        if self.is_gtech_synthesis():
+            file_logic = self.apply_gtech_tans(design, target_folder)
+        self.apply_physics_synthesis(file_logic, target_folder)
 
-    def apply_gtech_tans(self, desgin, filename, target_folder):
+    def apply_gtech_tans(self, desgin, target_folder):
         """ translate the design to gtech format
         """
         gtech = os.path.join(target_folder, self.raw_gtech_name)
@@ -185,7 +205,7 @@ class Synthesis(object):
             script = "start; anchor -set yosys; read_aiger -file {0}; hierarchy -auto-top; \
                     rename -top {1}; techmap; abc -exe {2} -genlib {3}; \
                     write_verilog {4}; stop;".format(desgin, 
-                                                    "top_module",
+                                                    self.top_model_name,
                                                     self.params.tool_abc(),
                                                     self.params.lib_gtech_genlib(),
                                                     gtech)
@@ -202,7 +222,7 @@ class Synthesis(object):
             4. physics design
         """
         logics_root = ["abc"]
-        logics_aux = ["aig", "oig", "aog", "xag", "xog", "primary", "mig", "xmg", "gtg"]
+        logics_aux = ["aig", "oig", "xag", "primary", "mig", "gtg"]
         aigs_synthesised = []
         for logic_root in logics_root:
             folder_aig = os.path.join(target_folder, logic_root)
@@ -219,7 +239,10 @@ class Synthesis(object):
                 
                 for future in tqdm( futures, desc= "abc ing"):
                     future.result()
-                
+        
+        if self.is_only_abc():
+            return
+        
         # Boolean representation
         for logic_aux in logics_aux:
     
@@ -236,8 +259,15 @@ class Synthesis(object):
         return
 
             
-    def process_logic_root(self, design_in, index, folder_root):       
-        file_script = os.path.join(folder_root, "recipe_{0}.script".format(index))
+    def process_logic_root(self, design_in, index, folder_root):
+        """ synthesis by ABC algorithms
+        Args:
+            design_in (_type_): _description_
+            index (_type_): _description_
+            folder_root (_type_): _description_
+        """
+        file_script = os.path.join(folder_root, "recipe_{0}.tcl".format(index))
+        file_seq = os.path.join(folder_root, "recipe_{0}.seq".format(index))
         file_logic = os.path.join(folder_root, "recipe_{0}.logic.v".format(index))
         file_logic_aig = os.path.join(folder_root, "recipe_{0}.logic.aig".format(index))
         file_logic_graphml = os.path.join(folder_root, "recipe_{0}.logic.graphml".format(index))
@@ -255,11 +285,17 @@ class Synthesis(object):
         file_timing_qor = os.path.join(folder_root, "recipe_{0}.asic.timing.qor.json".format(index))    # asic timing
         file_power_qor = os.path.join(folder_root, "recipe_{0}.asic.power.qor.json".format(index))    # asic power
         
-        script = "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; ".format(design_in)
+        script = ""
+        # load the design
+        if self.is_gtech_synthesis():
+            script += "start; anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; ".format(design_in)
+            script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
+        else:
+            script += "start; anchor -tool abc; ntktype -tool abc -stat logic -type aig; read_aiger -file {0}; rename -top {1}; strash; ".format(design_in, self.top_model_name)
         
         # logic optimization
-        script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
-        script += gen_gaussian_sequence(self.params.recipe_length())
+        opt_sequence = gen_gaussian_sequence(self.params.recipe_length())
+        script += opt_sequence
         
         # write the logic network
         script += " write_dot -file {0}; write_graphml -file {1}; write_aiger -file {2}; write_verilog -file {3}; print_stats -file {4};".format( file_logic_dot, file_logic_graphml, file_logic_aig, file_logic, file_logic_qor)
@@ -280,15 +316,17 @@ class Synthesis(object):
                                     script)
         # store the script
         with open(file_script, "w") as f:
-            f.write(cmd)
+            f.write(script)
+        with open(file_seq, "w") as f:
+            f.write(opt_sequence)
+        
         log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-
 
 
     def process_logic_aux(self, aigs, index, logic_aux, folder_aux):
         aig_curr = aigs[index]
         
-        file_script = os.path.join(folder_aux, "recipe_{0}.script".format(index))
+        file_script = os.path.join(folder_aux, "recipe_{0}.tcl".format(index))
         file_logic = os.path.join(folder_aux, "recipe_{0}.logic.v".format(index))
         file_logic_graphml = os.path.join(folder_aux, "recipe_{0}.logic.graphml".format(index))
         file_logic_dot = os.path.join(folder_aux, "recipe_{0}.logic.dot".format(index))
@@ -331,7 +369,7 @@ class Synthesis(object):
                                       script)
         # store the script
         with open(file_script, "w") as f:
-            f.write(cmd)
+            f.write(script)
         log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     
 if __name__ == '__main__':    
