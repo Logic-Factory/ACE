@@ -1,6 +1,10 @@
+*.pyc
+*.ini
+core
+gmon.out
+abc.history
 .vscode/
 tmp/
 tool/
-*.pyc
 result/
 benchmark/
