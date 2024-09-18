@@ -82,11 +82,11 @@ def load_graphml(filename:str) -> Circuit:
             circuit.add_cell(node_id, [], node_func)
     
     # add the edges
-    for source, target, attr in raw_graph.edges(data=True):
-        src = circuit.get_node(source)
-        dst = circuit.get_node(target)
-        print(src.get_idx(), " -> ", dst.get_idx())
-        print(src.get_type(), " -> ", dst.get_type())
+    # for source, target, attr in raw_graph.edges(data=True):
+    #     src = circuit.get_node(source)
+    #     dst = circuit.get_node(target)
+    #     print(src.get_idx(), " -> ", dst.get_idx())
+    #     print(src.get_type(), " -> ", dst.get_type())
 
     for source, target, attr in raw_graph.edges(data=True):
         src = circuit.get_node(source)
