@@ -8,16 +8,18 @@ sys.path.append(proj_dir)
 import torch
 from torch_geometric.data import Data
 from typing import List
+
 from src.circuit.circuit import Circuit
 from src.dataset.dataset import OpenLS_Dataset
+from src.utils.feature import padding_feature_to
 
-class ClassDataset(OpenLS_Dataset):
+class ClassificationDataset(OpenLS_Dataset):
     """Functional Classification Dataset for the functional classification task
 
     Args:
         OpenLS_Dataset (_type_): _description_
     """
-    def __init__(self, root: str, curr_white_list: List[str], logic:str):
+    def __init__(self, root: str, curr_white_list: List[str], logic:str, feature_size:int):
         """_summary_
 
         Args:
@@ -30,6 +32,7 @@ class ClassDataset(OpenLS_Dataset):
         self.curr_white_list = curr_white_list
         self.curr_processed_dir = os.path.join(self.processed_dir, logic)
         self.logic = logic
+        self.feature_size = feature_size
         assert self.logic in self.logics
         assert all(design in self.white_list for design in self.curr_white_list)
         
@@ -50,7 +53,8 @@ class ClassDataset(OpenLS_Dataset):
                     data = pack[logic]
                     circuit: Circuit = data["circuit"].values[0]
                     graph = circuit.to_torch_geometric()
-                    graph.y = torch.tensor(label, dtype=torch.long) # label this graph 
+                    graph.y = torch.tensor(label, dtype=torch.long)         # label this graph
+                    graph = padding_feature_to(graph, self.feature_size)    # padding feature to the same size
                     dataset.append(graph)
             label += 1
         return dataset
@@ -66,6 +70,7 @@ if __name__ == "__main__":
     
     curr_white_list = ["i2c"]
     logic = "abc"
-    db = ClassDataset(folder, curr_white_list, logic)
+    feature_size = 64
+    db = ClassificationDataset(folder, curr_white_list, logic, feature_size)
     db.print_data_list()
     
