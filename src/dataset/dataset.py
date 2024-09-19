@@ -28,10 +28,10 @@ def sort_by_recipe_number(file_path):
         return float('inf')
 
 class OpenLS_Dataset(Dataset):
-    def __init__(self, root:str, recipe_size:int, transform=None, pre_transform=None):
+    def __init__(self, root:str, transform=None, pre_transform=None):
         self.root = os.path.abspath(root)
         self.processed_dir = os.path.join(self.root, "processed_dir")
-        self.recipe_size = int(recipe_size)
+        self.recipe_size = 2
         self.logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
         self.white_list = ["i2c"]
         self.data_list = []
@@ -45,7 +45,7 @@ class OpenLS_Dataset(Dataset):
         return len(self.data_list)
     
     def __getitem__(self, idx):
-        return self.data_list[idx].items()
+        return self.data_list[idx]
 
     def str_case_name(self, design, recipe_number):
         return f"{design}_recipe_{recipe_number}"
@@ -132,7 +132,7 @@ class OpenLS_Dataset(Dataset):
             self.data_list.append( [key, pack] )
             path_pt = os.path.join(self.processed_dir, self.str_case_name(design, index) + ".pt")
             torch.save(pack, path_pt)
-
+    
     def print_data_list(self):
         print("data list size", len(self.data_list))
         for key, pack in self.data_list:
@@ -149,9 +149,9 @@ class OpenLS_Dataset(Dataset):
                 print("pos: ", circuit.num_pos())
                 print("gates: ", circuit.num_gates())
                 print("edges: ", circuit.num_edges())
+        
 
 if __name__ == "__main__":
-    folder = sys.argv[1]
-    recipe_size = sys.argv[2]
-    db = OpenLS_Dataset(folder, recipe_size)
+    folder:str = sys.argv[1]
+    db = OpenLS_Dataset(folder)
     db.print_data_list()
