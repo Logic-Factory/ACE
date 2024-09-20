@@ -7,7 +7,7 @@ sys.path.append(proj_dir)
 
 import torch
 from torch_geometric.data import Data
-from typing import List
+from typing import List, Tuple
 
 from src.circuit.circuit import Circuit
 from src.dataset.dataset import OpenLS_Dataset
@@ -19,7 +19,7 @@ class ClassificationDataset(OpenLS_Dataset):
     Args:
         OpenLS_Dataset (_type_): _description_
     """
-    def __init__(self, root: str, curr_white_list: List[str], logic:str, feature_size:int):
+    def __init__(self, root: str, recipe_size, curr_white_list: List[str], logic:str, feature_size:int):
         """_summary_
 
         Args:
@@ -27,12 +27,13 @@ class ClassificationDataset(OpenLS_Dataset):
             curr_white_list (list[str]): current white list for the classification
             logic (str): logic type
         """
-        super().__init__(root)
+        super().__init__(root, recipe_size)
         
         self.curr_white_list = curr_white_list
         self.curr_processed_dir = os.path.join(self.processed_dir, logic)
         self.logic = logic
         self.feature_size = feature_size
+        self.count_classes = 0
         assert self.logic in self.logics
         assert all(design in self.white_list for design in self.curr_white_list)
         
@@ -46,19 +47,32 @@ class ClassificationDataset(OpenLS_Dataset):
         """
         dataset = []
 
-        label = 0
+        self.count_classes = 0
         for design in self.curr_white_list:
             for key, pack in self.data_list:
                 if design in key:
-                    data = pack[logic]
+                    data = pack[self.logic]
                     circuit: Circuit = data["circuit"].values[0]
                     graph = circuit.to_torch_geometric()
-                    graph.y = torch.tensor(label, dtype=torch.long)         # label this graph
+                    graph.y = torch.tensor(self.count_classes, dtype=torch.long)         # label this graph
                     graph = padding_feature_to(graph, self.feature_size)    # padding feature to the same size
                     dataset.append(graph)
-            label += 1
+            self.count_classes += 1
         return dataset
     
+    def num_classes(self):
+        return self.count_classes
+    
+    def split_train_test(self, train_ratio: float = 0.8) -> Tuple[List[Data], List[Data]]:
+        """Split the dataset into training and testing sets."""
+        train_size = int(train_ratio * len(self.data_list))
+        shuffled_indices = torch.randperm(len(self.data_list)).tolist()
+        train_indices = shuffled_indices[:train_size]
+        test_indices = shuffled_indices[train_size:]
+        train_dataset = [self.data_list[i] for i in train_indices]
+        test_dataset = [self.data_list[i] for i in test_indices]
+        return train_dataset, test_dataset
+        
     def print_data_list(self):
         for data in self.data_list:
             print("nodes:", data.x)

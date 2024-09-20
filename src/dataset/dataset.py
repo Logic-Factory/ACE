@@ -28,12 +28,20 @@ def sort_by_recipe_number(file_path):
         return float('inf')
 
 class OpenLS_Dataset(Dataset):
-    def __init__(self, root:str, transform=None, pre_transform=None):
+    def __init__(self, root:str, recipe_size:int = 500, transform=None, pre_transform=None):
+        """_summary_
+
+        Args:
+            root (str): _description_
+            recipe_size (int, optional): _description_. Defaults to 500. 500 is the default size of the dataset for each design.
+            transform (_type_, optional): _description_. Defaults to None.
+            pre_transform (_type_, optional): _description_. Defaults to None.
+        """
         self.root = os.path.abspath(root)
         self.processed_dir = os.path.join(self.root, "processed_dir")
-        self.recipe_size = 2
+        self.recipe_size = recipe_size
         self.logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
-        self.white_list = ["i2c"]
+        self.white_list = ["i2c", "fir"]
         self.data_list = []
         self.transform = transform
         
@@ -75,7 +83,7 @@ class OpenLS_Dataset(Dataset):
     
     def load_processed_data(self):
         processed_data = self.processed_data_list
-        for case in processed_data:
+        for case in tqdm(processed_data, desc="waiting"):
             basename = os.path.basename(case)
             filename = os.path.splitext(basename)[0]
             path = os.path.join(self.processed_dir, case)
