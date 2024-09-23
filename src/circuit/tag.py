@@ -92,10 +92,6 @@ class Tag(object):
                  Tag.str_node_nmux21(),
                  Tag.str_node_aoi21(),
                  Tag.str_node_oai21(),
-                 Tag.str_node_axi21(),
-                 Tag.str_node_xai21(),
-                 Tag.str_node_oxi21(),
-                 Tag.str_node_xoi21(),
                  Tag.str_node_cell()]
         return tags
 
@@ -186,22 +182,6 @@ class Tag(object):
     @staticmethod
     def str_node_oai21():
         return "GTECH_OAI21"
-
-    @staticmethod
-    def str_node_axi21():
-        return "GTECH_AXI21"
-
-    @staticmethod
-    def str_node_xai21():
-        return "GTECH_XAI21"
-
-    @staticmethod
-    def str_node_oxi21():
-        return "GTECH_OXI21"
-
-    @staticmethod
-    def str_node_xoi21():
-        return "GTECH_XOI21"
 
     @staticmethod
     def str_node_cell():

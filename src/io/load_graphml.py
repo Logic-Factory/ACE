@@ -28,7 +28,6 @@ def load_graphml(filename:str) -> Circuit:
     for id, attr in raw_graph.nodes(data=True):
         node_type = attr.get('type')
         node_func = attr.get('func')
-        assert node_type in Tag.tags_node(), f"Invalid node type: {node_type}"
 
         node_id = str(id)
         if node_type in Tag.str_all_const0():
@@ -43,7 +42,7 @@ def load_graphml(filename:str) -> Circuit:
         elif node_type == Tag.str_node_inv():
             circuit.add_inverter(node_id, [], node_func)
         elif node_type == Tag.str_node_buf():
-            circuit.add_inverter(node_id, [], node_func)
+            circuit.add_buffer(node_id, [], node_func)
         elif node_type == Tag.str_node_and2():
             circuit.add_and2(node_id, [], node_func)
         elif node_type == Tag.str_node_or2():
@@ -72,17 +71,9 @@ def load_graphml(filename:str) -> Circuit:
             circuit.add_aoi21(node_id, [], node_func)
         elif node_type == Tag.str_node_oai21():
             circuit.add_oai21(node_id, [], node_func)
-        elif node_type == Tag.str_node_axi21():
-            circuit.add_axi21(node_id, [], node_func)
-        elif node_type == Tag.str_node_xai21():
-            circuit.add_xai21(node_id, [], node_func)
-        elif node_type == Tag.str_node_oxi21():
-            circuit.add_oxi21(node_id, [], node_func)
-        elif node_type == Tag.str_node_xoi21():
-            circuit.add_xoi21(node_id, [], node_func)
-        # standard cell / LUT
+        # standard cell or FPGA LUT
         else:
-            assert (not node_type.startswith("GTECH_"))
+            assert (not node_type.startswith("GTECH_")) # not the specifical gtech nodes
             circuit.add_cell(node_id, [], node_func)
     
     # add the edges

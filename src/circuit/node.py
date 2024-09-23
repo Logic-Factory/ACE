@@ -47,6 +47,10 @@ class Node(object):
     @staticmethod
     def make_inverter(idx, fanins:list, truthtable:str):
         return Node(Tag.str_node_inv(), idx, fanins , truthtable )
+
+    @staticmethod
+    def make_buffer(idx, fanins:list, truthtable:str):
+        return Node(Tag.str_node_buf(), idx, fanins , truthtable )
     
     @staticmethod
     def make_and2(idx, fanins:list, truthtable:str):
@@ -102,22 +106,6 @@ class Node(object):
     @staticmethod
     def make_oai21(idx, fanins:list, truthtable:str):
         return Node(Tag.str_node_oai21(), idx, fanins , truthtable )
-    
-    @staticmethod
-    def make_axi21(idx, fanins:list, truthtable:str):
-        return Node(Tag.str_node_axi21(), idx, fanins , truthtable )
-
-    @staticmethod
-    def make_xai21(idx, fanins:list, truthtable:str):
-        return Node(Tag.str_node_xai21(), idx, fanins , truthtable )
-    
-    @staticmethod
-    def make_oxi21(idx, fanins:list, truthtable:str):
-        return Node(Tag.str_node_oxi21(), idx, fanins , truthtable )
-    
-    @staticmethod
-    def make_xoi21(idx, fanins:list, truthtable:str):
-        return Node(Tag.str_node_xoi21(), idx, fanins , truthtable )
 
     @staticmethod
     def make_cell(idx, fanins:list, truthtable:str):
@@ -183,18 +171,6 @@ class Node(object):
 
     def is_oai21(self):
         return self._type == Tag.str_node_oai21()
-    
-    def is_axi21(self):
-        return self._type == Tag.str_node_axi21()
-
-    def is_xai21(self):
-        return self._type == Tag.str_node_xai21()
-    
-    def is_oxi21(self):
-        return self._type == Tag.str_node_oxi21()
-
-    def is_xoi21(self):
-        return self._type == Tag.str_node_xoi21()
 
     def is_cell(self):
         return self._type == Tag.str_node_cell()
@@ -227,46 +203,45 @@ class Node(object):
     def get_truthtable(self):
         return self._truthtable
 
+
 class NodeTypeEnum(Enum):
     """_summary_
 
     Args:
         enumerate (_type_): _description_
     """
-    CONST0 = auto()
-    CONST1 = auto()
-    PI     = auto()
-    PO     = auto()
+    CONST0 = 0
+    CONST1 = 1
+    PI     = 2
+    PO     = 3
     # LOGIC GATES
-    INVERTER = auto()
-    BUFFER   = auto()
-    AND2     = auto()
-    NAND2    = auto()
-    OR2      = auto()
-    NOR2     = auto()
-    XOR2     = auto()
-    XNOR2    = auto()
-    MAJ3     = auto()
-    XOR3     = auto()
-    NAND3    = auto()
-    NOR3     = auto()
-    MUX21    = auto()
-    NMUX21   = auto()
-    AOI21    = auto()
-    OAI21    = auto()
-    AXI21    = auto()
-    XAI21    = auto()
-    OXI21    = auto()
-    XOI21    = auto()
+    INVERTER = 4
+    BUFFER   = 5
+    AND2     = 6
+    NAND2    = 7
+    OR2      = 8
+    NOR2     = 9
+    XOR2     = 10
+    XNOR2    = 11
+    MAJ3     = 12
+    XOR3     = 13
+    NAND3    = 14
+    NOR3     = 15
+    MUX21    = 16
+    NMUX21   = 17
+    AOI21    = 18
+    OAI21    = 19
     # TECH GATES
-    CELL     = auto()
+    CELL     = 20
     
     @staticmethod
     def node_domains():
         domains = {Tag.str_node_const0():NodeTypeEnum.CONST0.value,
+                   Tag.str_node_const1():NodeTypeEnum.CONST1.value,
                    Tag.str_node_pi():NodeTypeEnum.PI.value,
                    Tag.str_node_po():NodeTypeEnum.PO.value,
                    Tag.str_node_inv():NodeTypeEnum.INVERTER.value,
+                   Tag.str_node_buf():NodeTypeEnum.BUFFER.value,
                    Tag.str_node_and2():NodeTypeEnum.AND2.value,
                    Tag.str_node_nand2():NodeTypeEnum.NAND2.value,
                    Tag.str_node_or2():NodeTypeEnum.OR2.value,
@@ -280,11 +255,7 @@ class NodeTypeEnum(Enum):
                    Tag.str_node_mux21():NodeTypeEnum.MUX21.value,
                    Tag.str_node_nmux21():NodeTypeEnum.NMUX21.value,
                    Tag.str_node_aoi21():NodeTypeEnum.AOI21.value,
-                   Tag.str_node_oai21():NodeTypeEnum.OAI21.value,
-                   Tag.str_node_axi21():NodeTypeEnum.AXI21.value,
-                   Tag.str_node_xai21():NodeTypeEnum.XAI21.value,
-                   Tag.str_node_oxi21():NodeTypeEnum.OXI21.value,
-                   Tag.str_node_xoi21():NodeTypeEnum.XOI21.value,                   
+                   Tag.str_node_oai21():NodeTypeEnum.OAI21.value,                 
                    Tag.str_node_cell():NodeTypeEnum.CELL.value
                    }
         return domains

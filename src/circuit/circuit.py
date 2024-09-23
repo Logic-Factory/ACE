@@ -82,6 +82,18 @@ class Circuit(object):
         self._node_map[old_id] = idx
         return idx
 
+    def add_buffer(self, old_id:str,  fanins=None, truthtable:str=None):
+        if fanins is None:
+            fanins = []
+        if truthtable is None:
+            truthtable = ''
+        idx = len(self._nodes)
+        node = Node.make_buffer(idx, fanins, truthtable)
+        self._gates.append(node)
+        self._nodes.append(node)
+        self._node_map[old_id] = idx
+        return idx
+
     def add_and2(self, old_id:str,  fanins=None, truthtable:str=None):
         if fanins is None:
             fanins = []
@@ -245,54 +257,6 @@ class Circuit(object):
             truthtable = ''
         idx = len(self._nodes)
         node = Node.make_oai21(idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_axi21(self, old_id:str,  fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_axi21(idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_xai21(self, old_id:str,  fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xai21(idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._node_map[old_id] = idx
-        return idx
-    
-    def add_oxi21(self, old_id:str,  fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_oxi21(idx, fanins, truthtable)
-        self._gates.append(node)
-        self._nodes.append(node)
-        self._node_map[old_id] = idx
-        return idx
-
-    def add_xoi21(self, old_id:str,  fanins=None, truthtable:str=None):
-        if fanins is None:
-            fanins = []
-        if truthtable is None:
-            truthtable = ''
-        idx = len(self._nodes)
-        node = Node.make_xoi21(idx, fanins, truthtable)
         self._gates.append(node)
         self._nodes.append(node)
         self._node_map[old_id] = idx
