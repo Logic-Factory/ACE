@@ -147,7 +147,8 @@ class Synthesis(object):
         self.gtech_synthesis = True
         self.only_abc = False
         self.top_model_name = "top_module"
-        self.raw_gtech_name = "raw.gtech.v"
+        self.raw_gtech_name = "raw.gtech"
+        self.raw_aig_name = "raw.aig"
         
     def run(self):
         # self.set_aig_synthesis()
@@ -189,6 +190,7 @@ class Synthesis(object):
             step4: technology mapping
             step5: physics design
         """
+        assert self.is_gtech_synthesis()
         # get the raw gtech first
         file_logic = design
         if self.is_gtech_synthesis():
@@ -198,21 +200,39 @@ class Synthesis(object):
     def apply_gtech_tans(self, desgin, target_folder):
         """ translate the design to gtech format
         """
-        gtech = os.path.join(target_folder, self.raw_gtech_name)
-        if os.path.exists(gtech):
-            return gtech
-        else:
-            script = "start; anchor -set yosys; read_aiger -file {0}; hierarchy -auto-top; \
+        gtech_verilog = os.path.join(target_folder, self.raw_gtech_name + ".v")                  # yosys输出的gtech verilog
+        gtech_aig = os.path.join(target_folder, self.raw_gtech_name + ".aig")                    # gtech 转成的aig
+        gtech_aig_verilog = os.path.join(target_folder, self.raw_gtech_name + ".aig.v")          # gtech 转成的aig's verilog
+        gtech_graphml = os.path.join(target_folder, self.raw_gtech_name + ".graphml")            # gtech 转成的graphml
+        gtech_aig_graphml = os.path.join(target_folder, self.raw_gtech_name + ".aig.graphml")    # gtech 转成的aig's graphml
+        
+        script = "start; "
+        if os.path.exists(gtech_verilog) and os.path.exists(gtech_graphml) and os.path.exists(gtech_aig) and os.path.exists(gtech_aig_graphml) and os.path.exists(gtech_aig_verilog):
+            pass              
+        # gtech verilog and graphml
+        if os.path.exists(gtech_verilog):   # gtech存在，但是graphml没有，重新生成graphml即可
+            script += "anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; write_graphml -file {1};".format(gtech_verilog, gtech_graphml)
+        else:                               # graphml存在，但是gtech没有，gtech和graphml都重新生成
+            script += "anchor -set yosys; read_aiger -file {0}; hierarchy -auto-top; \
                     rename -top {1}; techmap; abc -exe {2} -genlib {3}; \
-                    write_verilog {4}; stop;".format(desgin, 
+                    write_verilog {4}; ".format(desgin, 
                                                     self.top_model_name,
                                                     self.params.tool_abc(),
                                                     self.params.lib_gtech_genlib(),
-                                                    gtech)
-            cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(), 
-                                        script)
-            log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            return gtech
+                                                    gtech_verilog)
+            script += "anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; write_graphml -file {1};".format(gtech_verilog, gtech_graphml)
+
+        # gtech's aig and graphml
+        if os.path.exists(gtech_aig) and os.path.exists(gtech_aig_graphml) and os.path.exists(gtech_aig_verilog):
+            pass
+        else:
+            script += "anchor -tool lsils; ntktype -tool lsils -stat logic -type gtg; read_gtech -file {0}; ".format(gtech_verilog)
+            script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
+            script += "write_aiger -file {0}; write_graphml -file {1}; write_verilog -file {2};".format(gtech_aig, gtech_aig_graphml, gtech_aig_verilog)
+
+        script += "stop;"
+        cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(), script)
+        log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     
     def apply_physics_synthesis(self, design_in, target_folder):
         """ physics synthesis
@@ -283,7 +303,7 @@ class Synthesis(object):
         file_asic_qor = os.path.join(folder_root, "recipe_{0}.asic.qor.json".format(index))
         # physics QoR
         file_timing_qor = os.path.join(folder_root, "recipe_{0}.asic.timing.qor.json".format(index))    # asic timing
-        file_power_qor = os.path.join(folder_root, "recipe_{0}.asic.power.qor.json".format(index))    # asic power
+        file_power_qor = os.path.join(folder_root, "recipe_{0}.asic.power.qor.json".format(index))      # asic power
         
         script = ""
         # load the design
@@ -292,7 +312,7 @@ class Synthesis(object):
             script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
         else:
             script += "start; anchor -tool abc; ntktype -tool abc -stat logic -type aig; read_aiger -file {0}; rename -top {1}; strash; ".format(design_in, self.top_model_name)
-        
+            
         # logic optimization
         opt_sequence = gen_gaussian_sequence(self.params.recipe_length())
         script += opt_sequence
