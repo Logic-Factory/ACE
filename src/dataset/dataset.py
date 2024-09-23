@@ -29,7 +29,7 @@ def sort_by_recipe_number(file_path):
         return float('inf')
 
 class OpenLS_Dataset(Dataset):
-    def __init__(self, root:str, recipe_size:int = 2, transform=None, pre_transform=None):
+    def __init__(self, root:str, recipe_size:int = 500, transform=None, pre_transform=None):
         """_summary_
 
         Args:
@@ -40,9 +40,9 @@ class OpenLS_Dataset(Dataset):
         """
         self.root = os.path.abspath(root)
         self.processed_dir = os.path.join(self.root, "processed_dir")
-        self.recipe_size = recipe_size
+        self.recipe_size = int(recipe_size)
         self.logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
-        self.white_list = ["i2c", "s9234_1_comb", "apex7_comb"]
+        self.black_list = ["processed_dir"]
         self.data_list = []
         self.transform = transform
         
@@ -62,7 +62,9 @@ class OpenLS_Dataset(Dataset):
     @property
     def raw_case_list(self):
         cases = []
-        for design in self.white_list:
+        for design in os.listdir(self.root):
+            if design in self.black_list:
+                continue
             for i in range(self.recipe_size):
                 case_name =  self.str_case_name(design, i)
                 cases.append(case_name)
@@ -98,7 +100,7 @@ class OpenLS_Dataset(Dataset):
         else:
             print("load from source file")
             for design in os.listdir(self.root):
-                if design not in self.white_list:
+                if design in self.black_list:
                     continue
                 print("load at: ", design)
                 for i in tqdm( range(self.recipe_size), desc="waiting"):
@@ -143,7 +145,6 @@ class OpenLS_Dataset(Dataset):
             pack[logic] = data
         
         if pack:
-            # print("pack: ", pack )
             self.data_list.append( [key, pack] )
             path_pt = os.path.join(self.processed_dir, self.str_case_name(design, index) + ".pt")
             torch.save(pack, path_pt)
@@ -169,5 +170,7 @@ class OpenLS_Dataset(Dataset):
 
 if __name__ == "__main__":
     folder:str = sys.argv[1]
-    db = OpenLS_Dataset(folder)
+    recipe_size:int = sys.argv[2]
+    
+    db = OpenLS_Dataset(folder, recipe_size)
     db.print_data_list()
