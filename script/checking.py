@@ -92,7 +92,6 @@ class Checking(object):
     """
     def __init__(self, params:Params):
         self.params = params
-        self.raw_gtech_name = "raw.gtech.v"
         
     def run(self):
         designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)
@@ -108,7 +107,7 @@ class Checking(object):
             count += 1
             
             target_folder = os.path.join(self.params.folder_target(), filename)
-            lost_and_found.extend( self.checking_and_regen(target_folder) )
+            lost_and_found.extend( self.checking_the_existed(target_folder) )
             
         if len(lost_and_found) > 0:
             print("Lost and found: \n{0}".format(lost_and_found))
@@ -120,11 +119,11 @@ class Checking(object):
             print("All files are generated!")
         return
 
-    def checking_and_regen(self, folder_one_design):
+    def checking_the_existed(self, folder_one_design):
         """
             checking whether all the files are generated, if not, this step will regen these file
         """
-        logics = ["abc", "aig", "oig", "aog", "xag", "xog", "primary", "mig", "xmg", "gtg"]
+        logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
         
         lost_and_found = []
         
