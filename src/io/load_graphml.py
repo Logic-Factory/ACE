@@ -3,8 +3,8 @@ current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
-import argparse
 import networkx as nx
+import gzip
 
 from src.circuit.tag import Tag
 from src.circuit.node import Node
@@ -17,7 +17,11 @@ def load_graphml(filename:str) -> Circuit:
     :param filename: the name of the file to load
     :return: a LogicGraph object
     """
-    raw_graph = nx.read_graphml(filename)
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rb') as f:
+            raw_graph = nx.read_graphml(f)
+    else:
+        raw_graph = nx.read_graphml(filename)
     circuit = Circuit()
     
     # only add the nodes, leave the fanins alone
@@ -95,9 +99,6 @@ def load_graphml(filename:str) -> Circuit:
     return circuit
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Load a graphml file and return a LogicGraph/CellGraph object')
-    parser.add_argument('--file', type=str, help='the name of the file to load')
-    args = parser.parse_args()
-
-    circuit = load_graphml(args.file)
+    file = sys.argv[1]
+    circuit = load_graphml(file)
     print(circuit.to_torch_geometric())

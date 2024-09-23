@@ -4,7 +4,7 @@ proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
 import json
-import argparse
+import gzip
 
 class QoR(object):
     def __init__(self):
@@ -74,7 +74,11 @@ class QoR(object):
 
 def load_qor(file):
     count = 0
-    with open(file, 'r') as f:
+    if file.endswith('.gz'):
+        opener = gzip.open
+    else:
+        opener = open
+    with opener(file, 'rt') as f:
         data = json.load(f)
         qor = QoR()
         if 'gates' in data:
@@ -109,11 +113,9 @@ def load_qor(file):
         return qor
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Load a graphml file and return a LogicGraph/CellGraph object')
-    parser.add_argument('--file', type=str, help='the name of the file to load')
-    args = parser.parse_args()
 
-    qor = load_qor(args.file)
+    file = sys.argv[1]
+    qor = load_qor(file)
     
     print('Size: {}'.format(qor.get_size()))
     print('Depth: {}'.format(qor.get_depth()))
