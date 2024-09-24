@@ -23,3 +23,21 @@ def padding_feature_to(graph:Data, feature_size:int):
     additional_features = torch.randn(len(graph.x), pad_size)
     graph.x = torch.cat((graph.x, additional_features), dim=1)
     return graph
+  
+
+def padding_feature_to_nochange(graph:Data, feature_size:int):
+    """_summary_
+
+    Args:
+        graph (Data): _description_
+        feature_size (int): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    pad_size = feature_size - graph.x.shape[1]
+    assert pad_size >= 0, "original feature size is too large"
+    x = graph.x.to(torch.float)
+    additional_features = torch.randn(len(x), pad_size)
+    x = torch.cat((x, additional_features), dim=1)
+    return graph
