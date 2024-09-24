@@ -6,6 +6,7 @@ sys.path.append(proj_dir)
 
 import re
 import glob
+import gzip
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
@@ -18,7 +19,7 @@ from torch.utils.data import Dataset
 from src.circuit.circuit import Circuit, Node, Tag
 from src.io.load_graphml import load_graphml
 from src.io.load_qor import QoR, load_qor
-from src.io.load_seq import load_seq, load_raw_seq
+from src.io.load_seq import load_seq
 
 def sort_by_recipe_number(file_path):
     match = re.search(r'recipe_(\d+)', os.path.basename(file_path))
@@ -39,9 +40,9 @@ class OpenLS_Dataset(Dataset):
         """
         self.root = os.path.abspath(root)
         self.processed_dir = os.path.join(self.root, "processed_dir")
-        self.recipe_size = recipe_size
+        self.recipe_size = int(recipe_size)
         self.logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
-        self.white_list = ["i2c", "fir"]
+        self.black_list = ["processed_dir"]
         self.data_list = []
         self.transform = transform
         
@@ -61,7 +62,9 @@ class OpenLS_Dataset(Dataset):
     @property
     def raw_case_list(self):
         cases = []
-        for design in self.white_list:
+        for design in os.listdir(self.root):
+            if design in self.black_list:
+                continue
             for i in range(self.recipe_size):
                 case_name =  self.str_case_name(design, i)
                 cases.append(case_name)
@@ -97,7 +100,7 @@ class OpenLS_Dataset(Dataset):
         else:
             print("load from source file")
             for design in os.listdir(self.root):
-                if design not in self.white_list:
+                if design in self.black_list:
                     continue
                 print("load at: ", design)
                 for i in tqdm( range(self.recipe_size), desc="waiting"):
@@ -114,9 +117,15 @@ class OpenLS_Dataset(Dataset):
             power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json")
             seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq")
             if not os.path.exists(logic_file) or not os.path.exists(area_file) or not os.path.exists(timing_file) or not os.path.exists(power_file):
-                print("design recipe not complete, and skip this: ", key)
-                continue
-            
+                logic_file = os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml.gz")
+                area_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json.gz")
+                timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.gz")
+                power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.gz")
+                seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq.gz")
+                if not os.path.exists(logic_file) or not os.path.exists(area_file) or not os.path.exists(timing_file) or not os.path.exists(power_file):
+                    print("design recipe not complete, and skip this: ", key)
+                    continue
+
             circuit = load_graphml(logic_file)
             area = load_qor(area_file).get_area()
             timing = load_qor(timing_file).get_timing()
@@ -124,7 +133,7 @@ class OpenLS_Dataset(Dataset):
             
             seq = ""
             if logic == "abc":
-                seq = load_raw_seq(seq_file)
+                seq = load_seq(seq_file)
             data = pd.DataFrame({
                 "circuit": [circuit],
                 "type": [logic],
@@ -136,11 +145,11 @@ class OpenLS_Dataset(Dataset):
             pack[logic] = data
         
         if pack:
-            # print("pack: ", pack )
             self.data_list.append( [key, pack] )
             path_pt = os.path.join(self.processed_dir, self.str_case_name(design, index) + ".pt")
             torch.save(pack, path_pt)
-    
+        return pack
+
     def print_data_list(self):
         print("data list size", len(self.data_list))
         for key, pack in self.data_list:
@@ -161,5 +170,7 @@ class OpenLS_Dataset(Dataset):
 
 if __name__ == "__main__":
     folder:str = sys.argv[1]
-    db = OpenLS_Dataset(folder)
+    recipe_size:int = sys.argv[2]
+    
+    db = OpenLS_Dataset(folder, recipe_size)
     db.print_data_list()

@@ -3,8 +3,8 @@ current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
-import argparse
 import networkx as nx
+import gzip
 
 from src.circuit.tag import Tag
 from src.circuit.node import Node
@@ -17,14 +17,17 @@ def load_graphml(filename:str) -> Circuit:
     :param filename: the name of the file to load
     :return: a LogicGraph object
     """
-    raw_graph = nx.read_graphml(filename)
+    if filename.endswith('.gz'):
+        with gzip.open(filename, 'rb') as f:
+            raw_graph = nx.read_graphml(f)
+    else:
+        raw_graph = nx.read_graphml(filename)
     circuit = Circuit()
     
     # only add the nodes, leave the fanins alone
     for id, attr in raw_graph.nodes(data=True):
         node_type = attr.get('type')
         node_func = attr.get('func')
-        assert node_type in Tag.tags_node(), f"Invalid node type: {node_type}"
 
         node_id = str(id)
         if node_type in Tag.str_all_const0():
@@ -39,7 +42,7 @@ def load_graphml(filename:str) -> Circuit:
         elif node_type == Tag.str_node_inv():
             circuit.add_inverter(node_id, [], node_func)
         elif node_type == Tag.str_node_buf():
-            circuit.add_inverter(node_id, [], node_func)
+            circuit.add_buffer(node_id, [], node_func)
         elif node_type == Tag.str_node_and2():
             circuit.add_and2(node_id, [], node_func)
         elif node_type == Tag.str_node_or2():
@@ -68,17 +71,9 @@ def load_graphml(filename:str) -> Circuit:
             circuit.add_aoi21(node_id, [], node_func)
         elif node_type == Tag.str_node_oai21():
             circuit.add_oai21(node_id, [], node_func)
-        elif node_type == Tag.str_node_axi21():
-            circuit.add_axi21(node_id, [], node_func)
-        elif node_type == Tag.str_node_xai21():
-            circuit.add_xai21(node_id, [], node_func)
-        elif node_type == Tag.str_node_oxi21():
-            circuit.add_oxi21(node_id, [], node_func)
-        elif node_type == Tag.str_node_xoi21():
-            circuit.add_xoi21(node_id, [], node_func)
-        # standard cell / LUT
+        # standard cell or FPGA LUT
         else:
-            assert (not node_type.startswith("GTECH_"))
+            assert (not node_type.startswith("GTECH_")) # not the specifical gtech nodes
             circuit.add_cell(node_id, [], node_func)
     
     # add the edges
@@ -95,9 +90,6 @@ def load_graphml(filename:str) -> Circuit:
     return circuit
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Load a graphml file and return a LogicGraph/CellGraph object')
-    parser.add_argument('--file', type=str, help='the name of the file to load')
-    args = parser.parse_args()
-
-    circuit = load_graphml(args.file)
+    file = sys.argv[1]
+    circuit = load_graphml(file)
     print(circuit.to_torch_geometric())
