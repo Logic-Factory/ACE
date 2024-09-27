@@ -14,7 +14,3 @@ GATE   nand3  2  O=!(a*b*c);                     PIN * UNKNOWN 1 999 1.0 0.0 1.0
 GATE   nor3   2  O=!(a+b+c);                     PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
 GATE   aoi21  1  O=!((a*b)+c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
 GATE   oai21  1  O=!((a+b)*c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
-GATE   axi21  1  O=!((a*b)^c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
-GATE   xai21  1  O=!((a^b)*c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
-GATE   oxi21  1  O=!((a+b)^c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
-GATE   xoi21  1  O=!((a^b)+c);                   PIN * UNKNOWN 1 999 1.0 0.0 1.0 0.0
