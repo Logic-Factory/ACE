@@ -4,6 +4,7 @@ proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
 import gzip
+import zstandard as zstd
 
 CmdPool = [
     "refactor",
@@ -26,15 +27,26 @@ CmdPool = [
 
 def load_seq(file):
     cmds = []
-    if file.endswith('.gz'):
-        opener = gzip.open
+    if file.endswith('.zst'):
+        with open(file, 'rb') as f:
+            dctx = zstd.ZstdDecompressor()
+            with dctx.stream_reader(f) as reader:
+                line = reader.read().decode('utf-8')
+                array = line.strip().split(';')
+                array = [item.strip() for item in array if item.strip()]
+                cmds.extend(array)
+    elif file.endswith('.gz'):
+        with gzip.open(file, 'rt') as f:
+            for line in f:
+                array = line.strip().split(';')
+                array = [item.strip() for item in array if item.strip()]
+                cmds.extend(array)
     else:
-        opener = open
-    with opener(file, 'rt') as f:
-        for line in f:
-            array = line.strip().split(';')
-            array = [item.strip() for item in array if item.strip()]
-            cmds.extend(array)
+        with open(file, 'rt') as f:
+            for line in f:
+                array = line.strip().split(';')
+                array = [item.strip() for item in array if item.strip()]
+                cmds.extend(array)
     for seq in cmds:
         if seq not in CmdPool:
             raise ValueError(f"Invalid command: {seq}")

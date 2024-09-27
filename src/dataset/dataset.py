@@ -109,22 +109,63 @@ class OpenLS_Dataset(Dataset):
     def load_one_logic(self, folder, design, index):
         pack = {}
         key = self.str_case_name(design, index)
-        path_one_design = os.path.join(folder, design)
+        path_one_design = os.path.join(folder, design)        
         for logic in self.logics:
-            logic_file = os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml")
-            area_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json")
-            timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json")
-            power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json")
-            seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq")
-            if not os.path.exists(logic_file) or not os.path.exists(area_file) or not os.path.exists(timing_file) or not os.path.exists(power_file):
+            logic_file = ""
+            area_file = ""
+            timing_file = ""
+            power_file = ""
+            seq_file = ""
+            
+            if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml") ):
+                logic_file = os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml.zst") ):
+                logic_file = os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml.zst")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml.gz") ):
                 logic_file = os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml.gz")
+            else:
+                print("no logic file")
+            
+            if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json") ):
+                area_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json.zst") ):
+                area_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json.zst")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json.gz") ):
                 area_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.qor.json.gz")
+            else:
+                print("no area file")
+
+            if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json") ):
+                timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.zst") ):
+                timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.zst")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.gz") ):
                 timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.gz")
+            else:
+                print("no timing file")
+
+            if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json") ):
+                power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.zst") ):
+                power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.zst")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.gz") ):
                 power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.gz")
+            else:
+                print("no power file")
+            
+            if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.seq") ):
+                seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.seq.zst") ):
+                seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq.zst")
+            elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.seq.gz") ):
                 seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq.gz")
-                if not os.path.exists(logic_file) or not os.path.exists(area_file) or not os.path.exists(timing_file) or not os.path.exists(power_file):
-                    print("design recipe not complete, and skip this: ", key)
-                    continue
+            else:
+                if logic == "abc":
+                    print("no seq file")
+
+            if logic_file == "" or area_file == "" or timing_file == "" or power_file == "":
+                print("design recipe not complete, and skip this: ", key)
+                continue
 
             circuit = load_graphml(logic_file)
             area = load_qor(area_file).get_area()
@@ -173,4 +214,4 @@ if __name__ == "__main__":
     recipe_size:int = sys.argv[2]
     
     db = OpenLS_Dataset(folder, recipe_size)
-    db.print_data_list()
+    # db.print_data_list()

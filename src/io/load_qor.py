@@ -5,6 +5,7 @@ sys.path.append(proj_dir)
 
 import json
 import gzip
+import zstandard as zstd
 
 class QoR(object):
     def __init__(self):
@@ -73,44 +74,56 @@ class QoR(object):
         return self.power_dynamic
 
 def load_qor(file):
-    count = 0
-    if file.endswith('.gz'):
-        opener = gzip.open
+    data = None
+    
+    if file.endswith('.zst'):
+        dctx = zstd.ZstdDecompressor()
+        with open(file, 'rb') as f:
+            with dctx.stream_reader(f) as reader:
+                data = json.load(reader)
+    elif file.endswith('.gz'):
+        with gzip.open(file, 'rt') as f:
+            data = json.load(f)
     else:
-        opener = open
-    with opener(file, 'rt') as f:
-        data = json.load(f)
-        qor = QoR()
-        if 'gates' in data:
-            qor.set_size(data['gates'])
-            count += 1
-        if 'depth' in data:
-            qor.set_depth(data['depth'])
-            count += 1
-        if 'area' in data:
-            qor.set_area(data['area'])
-            count += 1
-        if 'delay' in data:
-            qor.set_delay(data['delay'])
-            count += 1
-        if 'arrive_time' in data:
-            qor.set_timing(data['arrive_time'])
-            count += 1
-        if 'total_power' in data:
-            qor.set_power_total(data['total_power'])
-            count += 1
-        if 'internal_power' in data:
-            qor.set_power_internal(data['internal_power'])
-            count += 1
-        if 'leakage_power' in data:
-            qor.set_power_leakage(data['leakage_power'])
-            count += 1
-        if 'dynamic_power' in data:
-            qor.set_power_dynamic(data['dynamic_power'])
-            count += 1
-        if count == 0:
-            raise Exception('No QoR data in file')
-        return qor
+        with open(file, 'rt') as f:
+            data = json.load(f)
+    
+    if data is None:
+        raise Exception('Failed to load QoR data from file')
+    
+    count = 0
+    qor = QoR()
+
+    if 'gates' in data:
+        qor.set_size(data['gates'])
+        count += 1
+    if 'depth' in data:
+        qor.set_depth(data['depth'])
+        count += 1
+    if 'area' in data:
+        qor.set_area(data['area'])
+        count += 1
+    if 'delay' in data:
+        qor.set_delay(data['delay'])
+        count += 1
+    if 'arrive_time' in data:
+        qor.set_timing(data['arrive_time'])
+        count += 1
+    if 'total_power' in data:
+        qor.set_power_total(data['total_power'])
+        count += 1
+    if 'internal_power' in data:
+        qor.set_power_internal(data['internal_power'])
+        count += 1
+    if 'leakage_power' in data:
+        qor.set_power_leakage(data['leakage_power'])
+        count += 1
+    if 'dynamic_power' in data:
+        qor.set_power_dynamic(data['dynamic_power'])
+        count += 1
+    if count == 0:
+        raise Exception('No QoR data in file')
+    return qor
     
 if __name__ == '__main__':
 

@@ -3,8 +3,10 @@ current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
+import io
 import networkx as nx
 import gzip
+import zstandard as zstd
 
 from src.circuit.tag import Tag
 from src.circuit.node import Node
@@ -17,13 +19,18 @@ def load_graphml(filename:str) -> Circuit:
     :param filename: the name of the file to load
     :return: a LogicGraph object
     """
-    if filename.endswith('.gz'):
+    if filename.endswith('.zst'):
+        with open(filename, 'rb') as f:
+            dctx = zstd.ZstdDecompressor()
+            with dctx.stream_reader(f) as reader:
+                raw_graph = nx.read_graphml(reader)
+    elif filename.endswith('.gz'):
         with gzip.open(filename, 'rb') as f:
             raw_graph = nx.read_graphml(f)
     else:
         raw_graph = nx.read_graphml(filename)
+        
     circuit = Circuit()
-    
     # only add the nodes, leave the fanins alone
     for id, attr in raw_graph.nodes(data=True):
         node_type = attr.get('type')
