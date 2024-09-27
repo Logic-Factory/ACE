@@ -10,6 +10,69 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 
+from compress import compress_files_inplace
+
+OpenLS_Designs = [
+    "pci_conf_cyc_addr_dec_comb",
+    "ctrl",
+    "steppermotordrive",
+    "router",
+    "int2float",
+    "dec",
+    "sasc_comb",
+    "ss_pcm",
+    "usb_phy",
+    "simple_spi_comb",
+    "sasc",
+    "cavlc",
+    "simple_spi",
+    "priority",
+    "adder",
+    "pci_spoci_ctrl_comb",
+    "i2c",
+    "systemcdes",
+    "max",
+    "bar",
+    "spi",
+    "fir",
+    "wb_dma",
+    "des3_area",
+    "sin",
+    "mem_ctrl_comb",
+    "iir",
+    "pci_bridge32_comb",
+    "tv80",
+    "ac97_ctrl",
+    "arbiter",
+    "systemcaes",
+    "voter",
+    "usb_funct",
+    "sha256",
+    "mem_ctrl",
+    "dynamic_node",
+    "square",
+    "pci",
+    "aes_core",
+    "sqrt",
+    "multiplier",
+    "aes",
+    "fpu",
+    "log2",
+    "aes_secworks",
+    "aes_xcrypt",
+    "wb_conmax",
+    "tinyRocket",
+    "div",
+    "ethernet",
+    "bp_be",
+    "picosoc",
+    "vga_lcd",
+    "jpeg",
+    "hyp",
+    "idft",
+    "dft"
+]
+
 OptCmds_Aig = [
     "refactor",
     "refactor -l",
@@ -139,6 +202,15 @@ class Params:
     def recipe_times(self):
         return self._times
 
+def sort_designs(designs):
+    design_index = {design: index for index, design in enumerate(OpenLS_Designs)}
+    def get_sort_key(design):
+        basename = os.path.basename(design)
+        filename = os.path.splitext(basename)[0]
+        return design_index.get(filename, len(OpenLS_Designs))
+    sorted_designs = sorted(designs, key=get_sort_key)
+    return sorted_designs
+
 class Synthesis(object):
     """ Synthesis
     """
@@ -148,24 +220,6 @@ class Synthesis(object):
         self.only_abc = False
         self.top_model_name = "top_module"
         self.raw_gtech_name = "raw.gtech"
-        self.raw_aig_name = "raw.aig"
-        
-    def run(self):
-        # self.set_aig_synthesis()
-        # self.set_only_abc()
-        designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)
-        count = 1
-        for design in designs:
-            basename = os.path.basename(design)
-            filename = os.path.splitext(basename)[0]
-            
-            print("process at: ", filename, "   [", count, "/", len(designs), "]")
-            count += 1
-            
-            target_folder = os.path.join(self.params.folder_target(), filename)
-            os.makedirs(target_folder, exist_ok=True)
-            self.recipe_one_design(design, target_folder)
-        return
 
     def set_gtech_synthesis(self):
         self.gtech_synthesis = True
@@ -182,6 +236,29 @@ class Synthesis(object):
     def is_only_abc(self):
         return self.only_abc
 
+    def run(self):
+        self.set_gtech_synthesis()
+        designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)        
+        sorted_designs = sort_designs(designs)
+        
+        count = 1
+        for design in sorted_designs:
+            basename = os.path.basename(design)
+            filename = os.path.splitext(basename)[0]
+            
+            print("process at: ", filename, "   [", count, "/", len(sorted_designs), "]")
+            count += 1
+            
+            target_folder = os.path.join(self.params.folder_target(), filename)
+            os.makedirs(target_folder, exist_ok=True)
+            
+            self.recipe_one_design(design, target_folder)
+            
+            # compress current files
+            compress_files_inplace(target_folder, 'zst')
+        return
+
+
     def recipe_one_design(self, design, target_folder):
         """ synthesis the data of one design
             step1: generate the gtech representation of the given design
@@ -190,13 +267,11 @@ class Synthesis(object):
             step4: technology mapping
             step5: physics design
         """
-        assert self.is_gtech_synthesis()
         # get the raw gtech first
         file_logic = design
-        if self.is_gtech_synthesis():
-            file_logic = self.apply_gtech_tans(design, target_folder)
+        file_logic = self.apply_gtech_tans(design, target_folder)
         self.apply_physics_synthesis(file_logic, target_folder)
-
+    
     def apply_gtech_tans(self, desgin, target_folder):
         """ translate the design to gtech format
         """
@@ -233,7 +308,8 @@ class Synthesis(object):
         script += "stop;"
         cmd = "{0} -c \"{1}\"".format(self.params.tool_logicfactory(), script)
         log = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    
+        return gtech_verilog
+
     def apply_physics_synthesis(self, design_in, target_folder):
         """ physics synthesis
             1. Boolean representation
@@ -268,7 +344,7 @@ class Synthesis(object):
     
             folder_logic = os.path.join(target_folder, logic_aux)
             os.makedirs(folder_logic, exist_ok=True)
-            with ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor(max_workers=64) as executor:
                 futures = []
                 for i in range( len(aigs_synthesised) ):
                     future = executor.submit(self.process_logic_aux, aigs_synthesised, i, logic_aux, folder_logic)
@@ -303,7 +379,7 @@ class Synthesis(object):
         file_asic_qor = os.path.join(folder_root, "recipe_{0}.asic.qor.json".format(index))
         # physics QoR
         file_timing_qor = os.path.join(folder_root, "recipe_{0}.asic.timing.qor.json".format(index))    # asic timing
-        file_power_qor = os.path.join(folder_root, "recipe_{0}.asic.power.qor.json".format(index))      # asic power
+        file_power_qor = os.path.join(folder_root, "recipe_{0}.asic.power.qor.json".format(index))    # asic power
         
         script = ""
         # load the design
@@ -312,7 +388,7 @@ class Synthesis(object):
             script += "anchor -tool abc; ntktype -tool abc -stat strash -type aig; update -n; strash; "
         else:
             script += "start; anchor -tool abc; ntktype -tool abc -stat logic -type aig; read_aiger -file {0}; rename -top {1}; strash; ".format(design_in, self.top_model_name)
-            
+        
         # logic optimization
         opt_sequence = gen_gaussian_sequence(self.params.recipe_length())
         script += opt_sequence
