@@ -58,6 +58,8 @@ def get_geometric_data(circuit):
     return data
 
 
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Load a graphml file and return a LogicGraph/CellGraph object')
     parser.add_argument('--file', type=str, help='the name of the file to load')

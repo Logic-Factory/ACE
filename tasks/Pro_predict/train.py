@@ -17,10 +17,10 @@ import torch.nn.functional as F
 from torch.optim.adam import Adam
 
 # from net import ClassificationNet
-from net import GraphSAGE_NET
+from net import GraphSAGE_NET,get_model
 from dataset import Probability_prediction
 from src.utils.plot import plot_curve
-
+from dataset import PP_Data #necessary
 from torch_geometric.loader import DataLoader
 
 from sklearn.manifold import TSNE
@@ -30,15 +30,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
 
 class Trainer(object):
-    def __init__(self, root:str, workspace:str, recipe_size:int, white_design_list:List[str], logic:str, dim_input:int, dim_hidden:int, epoch:int, batch_size:int):
-        self.workspace = workspace
-        self.logic = logic
+    def __init__(self, args):
+        self.workspace = args.workspace
+        self.logic = args.logic
         os.makedirs(self.workspace, exist_ok=True)
         os.makedirs(os.path.join(self.workspace, self.logic), exist_ok=True)
-        self.epoch = epoch
-        self.batch_size = batch_size
-        self.dataset = Probability_prediction(root, recipe_size, white_design_list, logic, dim_input)
-        self.model = GraphSAGE_NET(dim_input, dim_hidden)
+        self.epoch = args.epoch_size
+        self.batch_size = args.batch_size
+        self.dataset = Probability_prediction(args.root, args.recipe_size, args.white_design_list, args.logic, args.dim_input)
+        self.model = get_model(args)
+        self.model.to(device)
         self.optimizer = Adam(self.model.parameters(), lr=0.001, weight_decay=1e-5)
         self.loss_func = nn.MSELoss()
         self.current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -52,18 +53,16 @@ class Trainer(object):
         total_loss_train, total_acc_train = [], []
         total_loss_test, total_acc_test = [], []
         for epoch in range(self.epoch):
-            loss_train, acc_train = self.train(dataloader_train)
-            loss_test, acc_test = self.eval(dataloader_test)
+            loss_train = self.train(dataloader_train)
+            loss_test = self.eval(dataloader_test)
             total_loss_train.append(loss_train)
-            total_acc_train.append(acc_train)
             total_loss_test.append(loss_test)
-            total_acc_test.append(acc_test)
             
-            print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f}), Train: {acc_train:.4f} ({acc_test:.4f})')
+            print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f})')
             plot_curve(lists= [total_loss_train], labels=[], title="train loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_loss_train.pdf"))
-            plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_train.pdf"))
+            # plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_train.pdf"))
             plot_curve(lists= [total_loss_test], labels=[], title="test loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_loss_test.pdf"))
-            plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_test.pdf"))
+            # plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_test.pdf"))
             
         # self.tsne_analysis(dataloader_train, os.path.join(self.workspace, self.logic, self.current_time + "_tsne_train.pdf"))
         # self.tsne_analysis(dataloader_test, os.path.join(self.workspace, self.logic, self.current_time + "_tsne_test.pdf"))
@@ -80,9 +79,7 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            pred = out.argmax(dim=1)
-            total_acc += pred.eq(data.y).sum().item()
-        return total_loss / len(dataloader.dataset), total_acc / len(dataloader.dataset)
+        return total_loss / len(dataloader.dataset)
 
     def eval(self, dataloader:DataLoader):
         self.model.eval()
@@ -94,9 +91,7 @@ class Trainer(object):
                 out = self.model(data)
                 loss = self.loss_func(out, data.label.unsqueeze(1))
                 total_loss += loss.item()
-                pred = out.argmax(dim=1)
-                total_acc += pred.eq(data.y).sum().item()
-        return total_loss / len(dataloader.dataset), total_acc / len(dataloader.dataset)
+        return total_loss / len(dataloader.dataset)
     
     def tsne_analysis(self, dataloader:DataLoader, output_path):
         # extract features
@@ -143,11 +138,16 @@ if __name__ == '__main__':
     parser.add_argument('--dim_input', type=int, default=64, help='the dimenssion of the feature size for each node')
     parser.add_argument('--dim_hidden', type=int, default=128, help='the dimension of the hidden layer')
     parser.add_argument('--epoch_size', type=int, default=100, help='epoch size for training')
-    parser.add_argument('--batch_size', type=int, default=1, help='the batch size of the dataloader')
+    parser.add_argument('--batch_size', type=int, default=4, help='the batch size of the dataloader')
+    parser.add_argument('--num_rounds', type=int, default=1, help='num_rounds')
+    parser.add_argument('--device', type=str, default="cpu", help='device')
+    parser.add_argument('--dim_mlp', type=int, default=64, help='dim_mlp')
+    parser.add_argument('--dim_pred', type=int, default=1, help='dim_pred')
+
     
     args = parser.parse_args()
 
-    white_desgin_list = ["i2c", "fir"]
+    args.white_design_list = ["i2c", "fir"]
     
-    trainer = Trainer(args.root, args.workspace, args.recipe_size, white_desgin_list, args.logic, args.dim_input, args.dim_hidden, args.epoch_size, args.batch_size)
+    trainer = Trainer(args)
     trainer.run()

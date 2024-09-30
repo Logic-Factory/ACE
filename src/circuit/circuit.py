@@ -5,7 +5,8 @@ sys.path.append(proj_dir)
 
 import torch
 from torch_geometric.data import Data
-
+import numpy as np
+import copy
 from src.circuit.tag import Tag
 from src.circuit.node import Node, NodeTypeEnum
     
@@ -347,6 +348,42 @@ class Circuit(object):
             self.foreach_fanin(self._nodes[idx], update_depth)
             self._depths[idx] = max_depth
 
+
+
+    def get_level(self):
+
+      def top_sort(edge_index, graph_size):
+          node_ids = np.arange(graph_size, dtype=int)
+          node_order = np.zeros(graph_size, dtype=int)
+          unevaluated_nodes = np.ones(graph_size, dtype=bool)
+          parent_nodes = edge_index[0]
+          child_nodes = edge_index[1]
+          n = 0
+          while unevaluated_nodes.any():
+              unevaluated_mask = unevaluated_nodes[parent_nodes]
+              unready_children = child_nodes[unevaluated_mask]
+              nodes_to_evaluate = unevaluated_nodes & ~np.isin(node_ids, unready_children)
+              node_order[nodes_to_evaluate] = n
+              unevaluated_nodes[nodes_to_evaluate] = False
+              n += 1
+          return torch.from_numpy(node_order).long()
+        
+      edge_index = self.get_edge_index()
+      print('edge_index',edge_index.shape)
+      num_nodes = self.num_nodes()
+      ns = torch.LongTensor([i for i in range(num_nodes)])
+      forward_level =  top_sort(edge_index, num_nodes)
+      reversed_edge = torch.LongTensor([list(edge_index[1]),list(edge_index[0])])
+      backward_level = top_sort(reversed_edge,num_nodes)
+      forward_index  = ns
+      backward_index = torch.LongTensor([i for i in range(num_nodes)])
+      return forward_level,backward_level,forward_index,backward_index
+
+    def get_gate(self):
+      node_domains = NodeTypeEnum.node_domains()
+      gate = [node_domains[node.get_type()] for node in self._nodes]
+      return torch.LongTensor(gate)
+
     def init_node_feature(self, type_node:str, size:int = 0):
         if type_node not in Tag.tags_node():
             raise ValueError("Invalid node type")
@@ -386,26 +423,33 @@ class Circuit(object):
 
 if __name__ == '__main__':
     aig = Circuit()
-    # # constant
-    # idx_const0 = aig.add_const0('const0')
-    # # primary inputs
-    # idx_a = aig.add_pi('a')
-    # idx_b = aig.add_pi('b')
-    # idx_c = aig.add_pi('c')
-    # idx_d = aig.add_pi('d')
-    # # internal gates
-    # idx_g1 = aig.add_gate(Tag.str_node_and2(), 'g1', [idx_a, idx_b])
-    # aig.add_fanin(idx_g1, idx_a)
-    # aig.add_fanin(idx_g1, idx_b)
-    # idx_g2 = aig.add_gate(Tag.str_node_and2(), 'g2', [idx_c, idx_d])
-    # aig.add_fanin(idx_g2, idx_c)
-    # aig.add_fanin(idx_g2, idx_d)
-    # idx_g3 = aig.add_gate(Tag.str_node_and2(), 'g3', [idx_g1, idx_g2])
-    # aig.add_fanin(idx_g3, idx_g1)
-    # aig.add_fanin(idx_g3, idx_g2)
-    # # primary outputs
-    # idx_f = aig.add_po("f", [idx_g3])
-    # aig.add_fanin(idx_f, idx_g3)
-    
-    # torch_data = aig.to_torch_geometric()
-    # print(torch_data)
+    # constant
+    idx_const0 = aig.add_const0('const0')
+    # primary inputs
+    idx_a = aig.add_pi('a')
+    idx_b = aig.add_pi('b')
+    idx_c = aig.add_pi('c')
+    idx_d = aig.add_pi('d')
+    # internal gates
+    idx_g1 = aig.add_and2('g1', [idx_a, idx_b])
+    aig.add_fanin(idx_g1, idx_a)
+    aig.add_fanin(idx_g1, idx_b)
+    idx_g2 = aig.add_and2('g2', [idx_c, idx_d])
+    aig.add_fanin(idx_g2, idx_c)
+    aig.add_fanin(idx_g2, idx_d)
+    idx_g3 = aig.add_and2( 'g3', [idx_g1, idx_g2])
+    aig.add_fanin(idx_g3, idx_g1)
+    aig.add_fanin(idx_g3, idx_g2)
+    # primary outputs
+    idx_f = aig.add_po("f", [idx_g3])
+    aig.add_fanin(idx_f, idx_g3)
+    forward_level,backward_level,forward_index,backward_index = aig.get_level()
+    # print(aig._gates)
+    gate = aig.get_gate()
+    print('gate',gate)
+    torch_data = aig.to_torch_geometric()
+    print(forward_level)
+    print(backward_level)
+    print(forward_index)
+    print(isinstance(forward_index, torch.Tensor))
+    print(backward_index)
