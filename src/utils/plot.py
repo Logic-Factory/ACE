@@ -1,4 +1,3 @@
-import os.path
 import os, sys
 current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
@@ -66,5 +65,39 @@ def plot_curve(lists, labels, title, x_label, y_label, save_path):
     axes.set_title(title)
     if len(labels) > 1:
         axes.legend(loc='upper right', fancybox = True, shadow = False, bbox_to_anchor=(1.05, 1), borderaxespad=0.)
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+
+def plot_2d_dots(x_list, y_list, title, x_label, y_label, save_path):
+    plt.clf()
+    fig, axes = plt.subplots(1, 1, sharex=False, sharey=False, figsize=(6, 4))
+    axes.grid(False)
+       
+    plt.scatter(x_list, y_list, marker=markers[0], color=colors[0])
+
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.set_title(title)
+    
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+def plot_3d_dots(x_list, y_list, z_list, title, x_label, y_label, z_label, save_path):
+    plt.clf()
+    
+    fig = plt.figure(figsize=(6, 4))
+    axes = fig.add_subplot(111, projection='3d')
+    
+    scatter = axes.scatter(x_list, y_list, z_list, c=z_list, cmap='viridis', s=50, alpha=0.8)
+
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.set_zlabel(z_label)
+
+    axes.view_init(elev=30, azim=45)
+
+    color_bar = plt.colorbar(scatter, ax=axes, shrink=0.5, aspect=10)
+    
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
