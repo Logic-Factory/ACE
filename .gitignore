@@ -6,5 +6,6 @@ abc.history
 .vscode/
 tmp/
 tool/
-result/
 benchmark/
+processed_dir/
+result/
