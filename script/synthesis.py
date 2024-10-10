@@ -13,7 +13,6 @@ from tqdm import tqdm
 from compress import compress_files_inplace
 
 OpenLS_Designs = [
-    "pci_conf_cyc_addr_dec_comb",
     "ctrl",
     "steppermotordrive",
     "router",
@@ -238,8 +237,17 @@ class Synthesis(object):
 
     def run(self):
         self.set_gtech_synthesis()
-        designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)        
-        sorted_designs = sort_designs(designs)
+        designs = glob.glob(os.path.join(self.params.folder_root(), '**/*.aig'), recursive=True)    
+            
+        sorted_designs = []
+        
+        for design in designs:
+            basename = os.path.basename(design)
+            filename = os.path.splitext(basename)[0]
+            if filename in OpenLS_Designs:
+                sorted_designs.append(design)
+        
+        sorted_designs = sort_designs(sorted_designs)
         
         count = 1
         for design in sorted_designs:
@@ -324,7 +332,7 @@ class Synthesis(object):
             folder_aig = os.path.join(target_folder, logic_root)
             os.makedirs(folder_aig, exist_ok=True)
             
-            with ThreadPoolExecutor() as executor:
+            with ThreadPoolExecutor(max_workers=64) as executor:
                 futures = []
                 for i in range( self.params.recipe_times()):
                     # make sure the logic_aux is corresponding to root aig
@@ -390,7 +398,7 @@ class Synthesis(object):
             script += "start; anchor -tool abc; ntktype -tool abc -stat logic -type aig; read_aiger -file {0}; rename -top {1}; strash; ".format(design_in, self.top_model_name)
         
         # logic optimization
-        opt_sequence = gen_gaussian_sequence(self.params.recipe_length())
+        opt_sequence = gen_random_sequence(self.params.recipe_length())
         script += opt_sequence
         
         # write the logic network
