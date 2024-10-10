@@ -7,8 +7,9 @@ sys.path.append(proj_dir)
 import re
 import glob
 import gzip
+from typing import List, Tuple
 from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import numpy as np
@@ -21,15 +22,8 @@ from src.io.load_graphml import load_graphml
 from src.io.load_qor import QoR, load_qor
 from src.io.load_seq import load_seq
 
-def sort_by_recipe_number(file_path):
-    match = re.search(r'recipe_(\d+)', os.path.basename(file_path))
-    if match:
-        return int(match.group(1))
-    else:
-        return float('inf')
-
 class OpenLS_Dataset(Dataset):
-    def __init__(self, root:str, recipe_size:int = 500, transform=None, pre_transform=None):
+    def __init__(self, root:str, recipe_size:int = 1000, design_list:List[str] = []):
         """_summary_
 
         Args:
@@ -42,11 +36,16 @@ class OpenLS_Dataset(Dataset):
         self.processed_dir = os.path.join(self.root, "processed_dir")
         self.recipe_size = int(recipe_size)
         self.logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
-        self.black_list = ["processed_dir"]
-        self.data_list = []
-        self.transform = transform
         
+        self.design_list = design_list       # store the used designs
+        if design_list == []:
+            self.design_list = self.raw_all_case_list()
+        else:
+            assert all([design in self.raw_all_case_list() for design in design_list]), "design not in the dataset"
+
         super().__init__()
+                
+        self.data_list = []
         os.makedirs(self.processed_dir, exist_ok=True)
         self.load_data()
         
@@ -56,60 +55,102 @@ class OpenLS_Dataset(Dataset):
     def __getitem__(self, idx):
         return self.data_list[idx]
 
-    def str_case_name(self, design, recipe_number):
-        return f"{design}_recipe_{recipe_number}"
-
-    @property
-    def raw_case_list(self):
+    def raw_all_case_list(self):
         cases = []
         for design in os.listdir(self.root):
-            if design in self.black_list:
+            if design == "processed_dir":
                 continue
-            for i in range(self.recipe_size):
-                case_name =  self.str_case_name(design, i)
-                cases.append(case_name)
+            cases.append(design)
         return cases
 
     @property
     def processed_data_list(self):
-        cases = self.raw_case_list
+        cases = self.design_list
         processed_files = []
         for i in range(len(cases)):
-            path_pt = os.path.join(self.processed_dir, f"{cases[i]}.pt")
+            path_pt = os.path.join(self.processed_dir, f"{cases[i]}_pack_{self.recipe_size}.pt")
             processed_files.append(path_pt)
         return processed_files
     
     @property
     def processed_data_exist(self):
-        file_paths = [os.path.join(self.processed_dir, fname) for fname in self.processed_data_list]
-        return all(os.path.exists(path) for path in file_paths)
+        return all(os.path.exists(path) for path in self.processed_data_list)
     
-    def load_processed_data(self):
-        processed_data = self.processed_data_list
-        for case in tqdm(processed_data, desc="waiting"):
-            basename = os.path.basename(case)
-            filename = os.path.splitext(basename)[0]
-            path = os.path.join(self.processed_dir, case)
-            data = torch.load(path, weights_only=False)
-            self.data_list.append( [filename, data] )
-
     def load_data(self):
         if self.processed_data_exist:
-            print("load from pt file")
+            print("load openls-d from pt file")
             self.load_processed_data()
         else:
-            print("load from source file")
-            for design in os.listdir(self.root):
-                if design in self.black_list:
-                    continue
-                print("load at: ", design)
-                for i in tqdm( range(self.recipe_size), desc="waiting"):
-                    self.load_one_logic(self.root, design, i)
+            print("load openls-d from source file")
+            cases = self.design_list
+            for design in tqdm( cases, desc="loading"):
+                self.load_one_design(self.root, design)
+        # sort the data_list according the desing_name
+        self.data_list.sort(key=lambda x: x["design_name"])
+        
+    def load_processed_data(self):
+        processed_data = self.processed_data_list
+        
+        def load_processed_design(design):
+            data = torch.load(design, weights_only=False)
+            self.data_list.append(data)
+        
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            futures = []
+            for design in tqdm(processed_data, desc="loading"):
+                futures.append(executor.submit(load_processed_design, design))
+            for future in as_completed(futures):
+                future.result()
     
+    def load_one_design(self, folder, desgin):
+        recipe_list = []
+        path_one_design = os.path.join(folder, desgin)
+        
+        raw_aig_file = ""
+        raw_gtech_file = ""
+        if os.path.exists( os.path.join(path_one_design, f"raw.gtech.aig.graphml") ):
+            raw_aig_file = os.path.join(path_one_design, f"raw.gtech.aig.graphml")
+        elif os.path.exists( os.path.join(path_one_design, f"raw.gtech.aig.graphml.zst") ):
+            raw_aig_file = os.path.join(path_one_design, f"raw.gtech.aig.graphml.zst")
+        elif os.path.exists( os.path.join(path_one_design, f"raw.gtech.aig.graphml.gz") ):
+            raw_aig_file = os.path.join(path_one_design, f"raw.gtech.aig.graphml.gz")
+        else:
+            print("no raw aig file")
+            assert False
+
+        if os.path.exists( os.path.join(path_one_design, f"raw.gtech.graphml") ):
+            raw_gtech_file = os.path.join(path_one_design, f"raw.gtech.graphml")
+        elif os.path.exists( os.path.join(path_one_design, f"raw.gtech.graphml.zst") ):
+            raw_gtech_file = os.path.join(path_one_design, f"raw.gtech.graphml.zst")
+        elif os.path.exists( os.path.join(path_one_design, f"raw.gtech.graphml.gz") ):
+            raw_gtech_file = os.path.join(path_one_design, f"raw.gtech.graphml.gz")
+        else:
+            print("no raw gtech file")
+            assert False
+        
+        src_aig = load_graphml(raw_aig_file)
+        src_gtech = load_graphml(raw_gtech_file)
+        
+        # load the recipes parallelly
+        with ThreadPoolExecutor(max_workers=64) as executor:
+            futures = []
+            for i in range(self.recipe_size):
+                futures.append( executor.submit(self.load_one_logic, folder, desgin, i) )
+            recipe_list = [future.result() for future in futures]   # preserve the original order of the recipe index
+        
+        data = {
+            "design_name": desgin,
+            "design_gtech": src_gtech,
+            "design_aig": src_aig,
+            "design_recipes": recipe_list
+        }
+        self.data_list.append( data )
+        path_pt = os.path.join(self.processed_dir, f"{desgin}_pack_{self.recipe_size}.pt")
+        torch.save(data, path_pt)
+            
     def load_one_logic(self, folder, design, index):
         pack = {}
-        key = self.str_case_name(design, index)
-        path_one_design = os.path.join(folder, design)        
+        path_one_design = os.path.join(folder, design)
         for logic in self.logics:
             logic_file = ""
             area_file = ""
@@ -164,7 +205,7 @@ class OpenLS_Dataset(Dataset):
                     print("no seq file")
 
             if logic_file == "" or area_file == "" or timing_file == "" or power_file == "":
-                print("design recipe not complete, and skip this: ", key)
+                print("design recipe not complete, and skip this: ", f"{design}_recipe_{index}")
                 continue
 
             circuit = load_graphml(logic_file)
@@ -184,34 +225,11 @@ class OpenLS_Dataset(Dataset):
                 "power": [power]
             })
             pack[logic] = data
-        
-        if pack:
-            self.data_list.append( [key, pack] )
-            path_pt = os.path.join(self.processed_dir, self.str_case_name(design, index) + ".pt")
-            torch.save(pack, path_pt)
         return pack
-
-    def print_data_list(self):
-        print("data list size", len(self.data_list))
-        for key, pack in self.data_list:
-            print("key: ", key)
-            for logic in self.logics:
-                data = pack[logic]
-                print("type: ", data["type"].values[0])
-                print("area: ", data["area"].values[0])
-                print("timing: ", data["timing"].values[0])
-                print("power: ", data["power"].values[0])
-                print("seq: ", data["seq"].values[0])
-                circuit: Circuit = data["circuit"].values[0]
-                print("pis: ", circuit.num_pis())
-                print("pos: ", circuit.num_pos())
-                print("gates: ", circuit.num_gates())
-                print("edges: ", circuit.num_edges())
-        
 
 if __name__ == "__main__":
     folder:str = sys.argv[1]
     recipe_size:int = sys.argv[2]
-    
-    db = OpenLS_Dataset(folder, recipe_size)
-    # db.print_data_list()
+    design_list = ["i2c", "priority", "ss_pcm", "tv80"]
+    # design_list = []
+    db = OpenLS_Dataset(folder, recipe_size, design_list)
