@@ -12,9 +12,6 @@ from torch_geometric.nn import GCNConv, SAGEConv
 from torch_geometric.nn import TopKPooling, SAGPooling
 from torch_geometric.nn import global_max_pool, global_mean_pool
 
-from src.nn.gcn import GCN_HOGA
-from src.nn.pooling import Pooling_TopK, Pooling_SAG
-
 class ClassificationNet(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
         super(ClassificationNet, self).__init__()

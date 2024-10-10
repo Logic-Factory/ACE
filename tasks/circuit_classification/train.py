@@ -15,8 +15,10 @@ import torch
 import torch.nn.functional as F
 from torch.optim.adam import Adam
 
-from net import ClassificationNet
 from dataset import ClassificationDataset
+from net import ClassificationNet
+
+from src.utils.feature import padding_feature_to
 from src.utils.plot import plot_curve
 
 from torch_geometric.loader import DataLoader
@@ -27,19 +29,32 @@ from sklearn.decomposition import PCA
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Trainer(object):
-    def __init__(self, root:str, workspace:str, recipe_size:int, white_design_list:List[str], logic:str, dim_input:int, dim_hidden:int, epoch:int, batch_size:int):
-        self.workspace = workspace
+    def __init__(self, root_openlsd:str, recipe_size:int, curr_designs:List[str], processed_dir:str, logic:str, dim_input:int, dim_hidden:int, epoch:int, batch_size:int, workspace:str):
+        self.curr_designs = curr_designs
+        self.processed_dir = processed_dir
         self.logic = logic
-        os.makedirs(self.workspace, exist_ok=True)
-        os.makedirs(os.path.join(self.workspace, self.logic), exist_ok=True)
+        self.dim_input = dim_input
+        self.dim_hidden = dim_hidden
         self.epoch = epoch
         self.batch_size = batch_size
-        self.dataset = ClassificationDataset(root, recipe_size, white_design_list, logic, dim_input)
+        
+        self.current_time = datetime.now().strftime('%Y_%m%d_%H%M%S')
+        self.workspace = os.path.join(workspace, logic, self.current_time)
+        os.makedirs(self.workspace, exist_ok=True)
+        
+        # load the dataset first
+        self.dataset = ClassificationDataset(root_openlsd, recipe_size, curr_designs, processed_dir, logic)
         self.model = ClassificationNet(dim_input, dim_hidden, self.dataset.num_classes()).to(device)
         self.optimizer = Adam(self.model.parameters(), lr=0.001, weight_decay=1e-5)
-        self.current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        
+    
+    def preproccess_graph(self):
+        for graph in self.dataset:
+            graph = padding_feature_to(graph, self.dim_input)
+    
     def run(self):
+        
+        self.preproccess_graph()
+        
         dataset_train, dataset_test = self.dataset.split_train_test(0.8)
         dataloader_train = DataLoader(dataset_train, batch_size=self.batch_size, shuffle=True)
         dataloader_test = DataLoader(dataset_test, batch_size=self.batch_size, shuffle=True)
@@ -55,14 +70,14 @@ class Trainer(object):
             total_loss_test.append(loss_test)
             total_acc_test.append(acc_test)
             
-            print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f}), Train: {acc_train:.4f} ({acc_test:.4f})')
-            plot_curve(lists= [total_loss_train], labels=[], title="train loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_loss_train.pdf"))
-            plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_train.pdf"))
-            plot_curve(lists= [total_loss_test], labels=[], title="test loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_loss_test.pdf"))
-            plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, self.logic, self.current_time + "_acc_test.pdf"))
+            print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f}), Acc: {acc_train:.4f} ({acc_test:.4f})')
+            plot_curve(lists= [total_loss_train], labels=[], title="train loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, "loss_train.pdf"))
+            plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_train.pdf"))
+            plot_curve(lists= [total_loss_test], labels=[], title="test loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace,"loss_test.pdf"))
+            plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_test.pdf"))
             
-        self.tsne_analysis(dataloader_train, os.path.join(self.workspace, self.logic, self.current_time + "_tsne_train.pdf"))
-        self.tsne_analysis(dataloader_test, os.path.join(self.workspace, self.logic, self.current_time + "_tsne_test.pdf"))
+        self.tsne_analysis(dataloader_train, os.path.join(self.workspace, "tsne_train.pdf"))
+        self.tsne_analysis(dataloader_test, os.path.join(self.workspace, "tsne_test.pdf"))
 
     def train(self, dataloader:DataLoader):
         self.model.train()
@@ -132,18 +147,19 @@ class Trainer(object):
 if __name__ == '__main__':
     # config the args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root', type=str, required=True, help='the path of the datapath')
-    parser.add_argument('--workspace', type=str, required=True, help='the path of the workspace to store the results')
-    parser.add_argument('--logic', type=str, default="abc", help='the logic type of the selected dataset')
+    parser.add_argument('--root_openlsd', type=str, required=True, help='the path of the datapath')
     parser.add_argument('--recipe_size', type=int, default=50, help='the extracted recipe size for each design')
+    parser.add_argument('--processed_dir', type=str, help='the dimenssion of the feature size for each node')
+    parser.add_argument('--logic', type=str, default="abc", help='the logic type of the selected dataset')
     parser.add_argument('--dim_input', type=int, default=64, help='the dimenssion of the feature size for each node')
     parser.add_argument('--dim_hidden', type=int, default=128, help='the dimension of the hidden layer')
     parser.add_argument('--epoch_size', type=int, default=100, help='epoch size for training')
     parser.add_argument('--batch_size', type=int, default=1, help='the batch size of the dataloader')
+    parser.add_argument('--workspace', type=str, required=True, help='the path of the workspace to store the results')
     
     args = parser.parse_args()
 
-    white_desgin_list = ["i2c", "fir"]
+    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
     
-    trainer = Trainer(args.root, args.workspace, args.recipe_size, white_desgin_list, args.logic, args.dim_input, args.dim_hidden, args.epoch_size, args.batch_size)
+    trainer = Trainer(args.root_openlsd, args.recipe_size, curr_designs, args.processed_dir, args.logic, args.dim_input, args.dim_hidden, args.epoch_size, args.batch_size, args.workspace)
     trainer.run()
