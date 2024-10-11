@@ -58,7 +58,7 @@ def plot_curve(lists, labels, title, x_label, y_label, save_path):
     
     x = range(len(lists[0]))
     for i, y in enumerate(lists):
-        axes.plot(x, y, color=color[i % len(color)], linestyle=style[i % len(style)], marker = markers[i % len(markers)], markevery=5, linewidth=1.5, alpha=0.8)
+        axes.plot(x, y, color=colors[i % len(colors)], linestyle=style[i % len(style)], marker = markers[i % len(markers)], markevery=5, linewidth=1.5, alpha=0.8)
     
     axes.set_xlabel(x_label)
     axes.set_ylabel(y_label)
@@ -83,6 +83,23 @@ def plot_2d_dots(x_list, y_list, title, x_label, y_label, save_path):
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
+def plot_multi_2d_dots(x_lists, y_lists, labels, title, x_label, y_label, save_path):
+    plt.clf()
+    fig, axes = plt.subplots(1, 1, sharex=False, sharey=False, figsize=(6, 4))
+    axes.grid(False)
+    
+    for i in range(len(x_lists)):
+        plt.scatter(x_lists[i], y_lists[i], marker=markers[i % len(markers)], color=colors[i % len(colors)], label=labels[i])
+
+    if len(labels) > 1:
+        axes.legend(loc='center left', fancybox = True, shadow = False, bbox_to_anchor=(1, 0.5))
+
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.set_title(title)
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+    
 def plot_3d_dots(x_list, y_list, z_list, title, x_label, y_label, z_label, save_path):
     plt.clf()
     
