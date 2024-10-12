@@ -6,6 +6,7 @@ sys.path.append(proj_dir)
 
 from typing import List
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 
 import torch
@@ -20,6 +21,7 @@ from net import CircuitRankNet
 from datetime import datetime
 
 from src.utils.feature import padding_feature_to
+from src.utils.plot import plot_curve
 
 from torch_geometric.loader import DataLoader
 
@@ -39,7 +41,7 @@ class Trainer(object):
         # load the dataset first
         self.dataset = RepresentationDataset(root_openlsd, recipe_size, curr_designs, processed_dir)
         self.model = CircuitRankNet(feature_size).to(device)
-        self.optimizer = Adam(self.model.parameters(), lr=0.001, weight_decay=1e-5)
+        self.optimizer = Adam(self.model.parameters(), lr=0.0001, weight_decay=1e-5)
         
     def preproccess_graph(self):
         for data in self.dataset:
@@ -67,7 +69,12 @@ class Trainer(object):
             total_acc_train.append(acc_train)
             total_loss_test.append(loss_test)
             total_acc_test.append(acc_test)
+            
             print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f}), Acc: {acc_train:.4f} ({acc_test:.4f})')
+            plot_curve(lists= [total_loss_train], labels=[], title="train loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, "loss_train.pdf"))
+            plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_train.pdf"))
+            plot_curve(lists= [total_loss_test], labels=[], title="test loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace,"loss_test.pdf"))
+            plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_test.pdf"))
         
     def train(self, dataloader:DataLoader):
         self.model.train()
@@ -83,6 +90,10 @@ class Trainer(object):
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
+            
+            if abs( target.item() - output.item() ) < 0.2:
+                total_acc += 1
+        total_acc /= len(dataloader)
         return total_loss, total_acc
     
     def eval(self, dataloader:DataLoader):
@@ -96,8 +107,13 @@ class Trainer(object):
             output = self.model(graph_0, graph_1)
             loss = F.binary_cross_entropy(output, target)
             total_loss += loss.item()
+
+            if abs( target.item() - output.item() ) <  0.2:
+                total_acc += 1
+        total_acc /= len(dataloader)
+        
         return total_loss, total_acc
-    
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_openlsd', type=str, required=True, help='the path of the datapath')
