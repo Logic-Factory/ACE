@@ -108,8 +108,7 @@ class RepresentationDataset(Dataset):
                 continue
             recipes_pack = entry["design_recipes"]
             for i in range(self.recipe_size):
-                # conbinations = list(itertools.combinations(self.logics, 2))
-                conbinations = [ ["aig", "xag"] ]
+                conbinations = list(itertools.combinations(self.logics, 2))
                 for pairs_logic in conbinations:
                     select0 = True  # flag to select the circuit
                     data_0 = recipes_pack[i][pairs_logic[0]]
