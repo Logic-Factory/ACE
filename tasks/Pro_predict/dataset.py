@@ -7,22 +7,26 @@ sys.path.append(proj_dir)
 
 import torch
 from tqdm import tqdm
-from torch_geometric.data import Data
+
 from typing import List, Tuple
 from simulate_tt import simulate_tt
 
 import pandas as pd
 import numpy as np
-
+import itertools
+from tqdm import tqdm
 
 from src.circuit.circuit import Circuit
 from src.dataset.dataset import OpenLS_Dataset
-from src.utils.feature import padding_feature_to,padding_feature_to_nochange
+from src.utils.feature import padding_feature_to_nochange
 from src.io.load_graphml import load_graphml
-from src.io.load_qor import QoR, load_qor
-from src.io.load_seq import load_seq
-from torch_geometric.data import Data
 
+
+from torch_geometric.data import Data
+from torch.utils.data import Dataset
+from src.dataset.dataset import OpenLS_Dataset
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from src.utils.numeric import float_approximately_equal
 
 
 class PP_Data(Data):
@@ -57,35 +61,118 @@ class PP_Data(Data):
 
 
 
-class Probability_prediction(OpenLS_Dataset):
+class Probability_prediction(Dataset):
     """Functional Classification Dataset for the functional classification task
 
     Args:
         OpenLS_Dataset (_type_): _description_
     """
-    def __init__(self, root: str, recipe_size, curr_white_list: List[str], logic:str, feature_size:int):
+    def __init__(self, root_openlsd, recipe_size, curr_designs, processed_dir):
         """_summary_
 
-        Args:
-            root (str): dataset root folder
-            curr_white_list (list[str]): current white list for the classification
+        Args:l
+            root_openlsd (str): root folder of openlsd dataset
+            curr_designs (list[str]): current white list for the classification
             logic (str): logic type
         """
-        # self.processed_dir = 'lm_data'
-        self.processed_dir = "/data/liumiao/code/OpenLS-D/tasks/Pro_predict/data_pp"
-        super().__init__(root, recipe_size)
+        self.root_openlsd:str = os.path.abspath(root_openlsd)
+        self.recipe_size:int = int(recipe_size)
+        self.curr_designs:List[str] = curr_designs
+        self.processed_dir:str = os.path.abspath(processed_dir) # store the processed data_list
+        self.feature_size = 64
+        self.logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+        self.data_list = []
+                        
+        os.makedirs(self.processed_dir, exist_ok=True)    
+        self.load_data()
         
-        self.curr_white_list = curr_white_list
-        
-        self.curr_processed_dir = os.path.join(self.processed_dir, logic)
-        self.logic = logic
-        self.feature_size = feature_size
-        self.count_classes = 0
-        assert self.logic in self.logics
-        # assert all(design in self.white_list for design in self.curr_white_list)
-        
-        self.data_list: List[PP_Data] = self.extract_and_label_subdataset()
-        
+        # self.data_list: List[PP_Data] = self.extract_and_label_subdataset()
+
+    def __len___(self):
+        return len(self.data_list)
+    
+    def __getitem__(self, idx):
+        return self.data_list[idx]
+
+    def design_recipe_name(self, design:str, recipe:int):
+        return f"{design}_recipe_{recipe}"
+    
+    @property
+    def raw_case_list(self):
+        cases = []
+        for design in self.curr_designs:
+            for i in range( self.recipe_size ):
+                cases.append(f"{self.design_recipe_name(design, i)}")
+        return cases
+    
+    @property
+    def processed_data_list(self):
+        cases = self.raw_case_list
+        processed_files = []
+        for i in range(len(cases)):
+            path_pt = os.path.join(self.processed_dir, f"{cases[i]}.pt")
+            processed_files.append(path_pt)
+        return processed_files
+    
+    @property
+    def processed_data_exist(self):
+        return all(os.path.exists(path) for path in self.processed_data_list)
+    
+    def load_data(self):
+        if self.processed_data_exist:
+            print("load circuit representation from pt file")
+            self.load_processed_data()
+        else:
+            print("load circuit representation from openls-d file")
+            self.openlsd:Dataset = OpenLS_Dataset(self.root_openlsd, self.recipe_size, self.curr_designs)
+            print("load the circuit representation db from openls-d file")
+            self.load_adaptive_subdataset()
+
+    def load_processed_data(self):
+        processed_data = self.processed_data_list
+        def load_processed_one_design_recipe(one_design_recipe):
+            data = torch.load(one_design_recipe, weights_only=False)
+            self.data_list.append(data)        
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            futures = []
+            for one_design_recipe in tqdm(processed_data, desc="loading"):
+                futures.append(executor.submit(load_processed_one_design_recipe, one_design_recipe))
+            for future in futures:
+                future.result()
+
+
+    def load_adaptive_subdataset(self):
+        """load adaptive subdataset from openls-d: extract and label
+        """
+        for entry in self.openlsd:
+            # print("entry",entry)
+            design = entry["design_name"]
+            if design not in self.curr_designs:
+                continue
+            recipes_pack = entry["design_recipes"]
+            label_int = self.curr_designs.index(design)
+            for i in range(self.recipe_size):
+                data = recipes_pack[i]["aig"]
+                circuit: Circuit = data["circuit"].values[0]
+                graph = circuit.to_torch_geometric()
+                x = circuit.get_node_features()
+                edge_index=circuit.get_edge_index()
+                    # graph = circuit.to_torch_geometric()
+
+                tt = simulate_tt(circuit)
+                # print("++++++++++++")
+                y = torch.tensor(label_int, dtype=torch.long)         # label this graph
+                label = torch.tensor(tt,dtype=torch.float32)
+                forward_level,backward_level,forward_index,backward_index = circuit.get_level()
+                gate = circuit.get_gate()
+                x_feature = padding_feature_to_nochange(x, self.feature_size)
+                graph = PP_Data(x,x_feature,edge_index,y,label,forward_level,backward_level,forward_index,backward_index,gate,tt)
+                    # padding feature to the same size
+                self.data_list.append(graph)
+                path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
+                torch.save(graph, path_pt)
+  
+
     def extract_and_label_subdataset(self):
         """_summary_
         Args:
@@ -142,8 +229,9 @@ class Probability_prediction(OpenLS_Dataset):
         train_dataset = [self.data_list[i] for i in train_indices]
         test_dataset = [self.data_list[i] for i in test_indices]
         return train_dataset, test_dataset
-        
+      
     def print_data_list(self):
+        print("self.data_list",len(self.data_list))
         for data in self.data_list:
             print('forward_index',data.forward_index.shape)
             # print("nodes:", data.x)
@@ -160,11 +248,8 @@ class Probability_prediction(OpenLS_Dataset):
     
 if __name__ == "__main__":
     folder:str = sys.argv[1]
-    
-    curr_white_list = ["i2c"]
-    recipe_size = 50
-    logic = "abc"
-    feature_size = 64
-    db = Probability_prediction(folder,recipe_size, curr_white_list, logic, feature_size)
+    recipe_size:int = sys.argv[2]
+    target:str = sys.argv[3]
+    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
+    db = Probability_prediction(root_openlsd=folder, recipe_size=recipe_size, curr_designs=curr_designs, processed_dir=target)
     db.print_data_list()
-    
