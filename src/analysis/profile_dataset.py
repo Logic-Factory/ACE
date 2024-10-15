@@ -42,23 +42,26 @@ class ProfileDataset:
             
             path_design_tgt = os.path.join(self.target, design)
             
+            logics = []
             for logic in self.logics:
                 print(f"Processing {design} {logic}")
-                logics_size, logics_depth, asics_size, asics_depth, asics_area, asics_timing, asics_power, fpgas_area, fpgas_delay = self.plot_design_logic(design, logic)
-                logicss_size.append(logics_size)
-                logicss_depth.append(logics_depth)
-                asicss_size.append(asics_size)
-                asicss_depth.append(asics_depth)
-                asicss_area.append(asics_area)
-                asicss_timing.append(asics_timing)
-                asicss_power.append(asics_power)
-                fpgass_area.append(fpgas_area)
-                fpgass_delay.append(fpgas_delay)
+                is_ok, logics_size, logics_depth, asics_size, asics_depth, asics_area, asics_timing, asics_power, fpgas_area, fpgas_delay = self.plot_design_logic(design, logic)
+                if is_ok:
+                    logics.append(logic)
+                    logicss_size.append(logics_size)
+                    logicss_depth.append(logics_depth)
+                    asicss_size.append(asics_size)
+                    asicss_depth.append(asics_depth)
+                    asicss_area.append(asics_area)
+                    asicss_timing.append(asics_timing)
+                    asicss_power.append(asics_power)
+                    fpgass_area.append(fpgas_area)
+                    fpgass_delay.append(fpgas_delay)
             
-            plot_multi_2d_dots( x_lists= logicss_size, y_lists= logicss_depth, labels= self.logics, title="Qor Distribution of Logic Graph", x_label="size", y_label="depth", save_path = os.path.join(path_design_tgt, "aana.logic.graph.pdf"))
-            plot_multi_2d_dots( x_lists= asicss_size,  y_lists= asicss_depth,  labels= self.logics, title="Qor Distribution of ASIC Graph",   x_label="size", y_label="depth", save_path = os.path.join(path_design_tgt, "aana.asic.graph.pdf"))
-            plot_multi_2d_dots( x_lists= asicss_area,  y_lists= asicss_timing, labels= self.logics, title="Qor Distribution of ASIC Netlist", x_label="area", y_label="timing",save_path = os.path.join(path_design_tgt, "aana.asic.circuit.pdf"))
-            plot_multi_2d_dots( x_lists= fpgass_area,  y_lists= fpgass_delay,  labels= self.logics, title="Qor Distribution of FPGA Netlist", x_label="area", y_label="timing",save_path = os.path.join(path_design_tgt, "aana.fpga.circuit.pdf"))
+            plot_multi_2d_dots( x_lists= logicss_size, y_lists= logicss_depth, labels= logics, title="Qor Distribution of Logic Graph", x_label="size", y_label="depth", save_path = os.path.join(path_design_tgt, "aana.logic.graph.pdf"))
+            plot_multi_2d_dots( x_lists= asicss_size,  y_lists= asicss_depth,  labels= logics, title="Qor Distribution of ASIC Graph",   x_label="size", y_label="depth", save_path = os.path.join(path_design_tgt, "aana.asic.graph.pdf"))
+            plot_multi_2d_dots( x_lists= asicss_area,  y_lists= asicss_timing, labels= logics, title="Qor Distribution of ASIC Netlist", x_label="area", y_label="timing",save_path = os.path.join(path_design_tgt, "aana.asic.circuit.pdf"))
+            plot_multi_2d_dots( x_lists= fpgass_area,  y_lists= fpgass_delay,  labels= logics, title="Qor Distribution of FPGA Netlist", x_label="area", y_label="timing",save_path = os.path.join(path_design_tgt, "aana.fpga.circuit.pdf"))
             
     def plot_design_logic(self, design, logic):
         # plot the distribution of QoR for each logic by different recipes
@@ -77,6 +80,8 @@ class ProfileDataset:
         fpgas_area = []
         fpgas_delay = []
         
+        is_ok = True
+        
         for index in range(self.recipe):
             logic_qor_file = ""
             asic_qor_file = ""
@@ -92,7 +97,7 @@ class ProfileDataset:
                 logic_qor_file = os.path.join(path_design_src, logic, f"recipe_{index}.logic.qor.json.gz")
             else:
                 print("no logic qor file:", os.path.join(path_design_src, logic, f"recipe_{index}.logic.qor.json"))
-                assert False
+                is_ok = False
                 
             if os.path.exists( os.path.join(path_design_src, logic, f"recipe_{index}.asic.qor.json") ):
                 asic_qor_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.qor.json")
@@ -102,7 +107,7 @@ class ProfileDataset:
                 asic_qor_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.qor.json.gz")
             else:
                 print("no area qor file:", os.path.join(path_design_src, logic, f"recipe_{index}.asic.qor.json"))
-                assert False
+                is_ok = False
                 
             if os.path.exists( os.path.join(path_design_src, logic, f"recipe_{index}.asic.timing.qor.json") ):
                 asic_timing_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.timing.qor.json")
@@ -112,7 +117,7 @@ class ProfileDataset:
                 asic_timing_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.timing.qor.json.gz")
             else:
                 print("no area timing file:", os.path.join(path_design_src, logic, f"recipe_{index}.asic.timing.qor.json"))
-                assert False
+                is_ok = False
                 
             if os.path.exists( os.path.join(path_design_src, logic, f"recipe_{index}.asic.power.qor.json") ):
                 asic_power_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.power.qor.json")
@@ -122,7 +127,7 @@ class ProfileDataset:
                 asic_power_file = os.path.join(path_design_src, logic, f"recipe_{index}.asic.power.qor.json.gz")
             else:
                 print("no area power file:", os.path.join(path_design_src, logic, f"recipe_{index}.asic.power.qor.json"))
-                assert False
+                is_ok = False
                 
             if os.path.exists( os.path.join(path_design_src, logic, f"recipe_{index}.fpga.qor.json") ):
                 fpga_qor_file = os.path.join(path_design_src, logic, f"recipe_{index}.fpga.qor.json")
@@ -132,7 +137,10 @@ class ProfileDataset:
                 fpga_qor_file = os.path.join(path_design_src, logic, f"recipe_{index}.fpga.qor.json.gz")
             else:
                 print("no fpga qor file:", os.path.join(path_design_src, logic, f"recipe_{index}.fpga.qor.json"))
-                assert False
+                is_ok = False
+            
+            if is_ok == False:
+                continue
             
             logic_size = load_qor(logic_qor_file).get_size()
             logic_depth = load_qor(logic_qor_file).get_depth()
@@ -156,12 +164,13 @@ class ProfileDataset:
         
         assert len(logics_size) == len(logics_depth) == len(asics_size) == len(asics_depth) == len(asics_area) == len(asics_timing) == len(asics_power) == len(fpgas_area) == len(fpgas_delay)
         
-        plot_2d_dots(x_list=logics_size, y_list=logics_depth, title= f"QoR Distribution of Logic Network ({logic})", x_label="circuit size", y_label="circuit depth", save_path=os.path.join(path_design_tgt, logic+f"_logic.graph.pdf") )
-        plot_2d_dots(x_list=asics_size, y_list=asics_depth, title= f"QoR Distribution of ASIC netlist ({logic})", x_label="circuit size", y_label="circuit depth", save_path=os.path.join(path_design_tgt, logic+f"_asic.graph.pdf") )
-        plot_2d_dots(x_list=asics_area, y_list=asics_timing, title= f"QoR Distribution of ASIC netlist ({logic})", x_label="circuit area", y_label="circuit delay", save_path=os.path.join(path_design_tgt, logic+f"_asic.circuit.2d.pdf") )
-        plot_2d_dots(x_list=fpgas_area, y_list=fpgas_delay, title= f"QoR Distribution of FPGA netlist ({logic})", x_label="circuit area", y_label="circuit delay", save_path=os.path.join(path_design_tgt, logic+f"_fpga.circuit.pdf") )
+        if is_ok:
+            plot_2d_dots(x_list=logics_size, y_list=logics_depth, title= f"QoR Distribution of Logic Network ({logic})", x_label="circuit size", y_label="circuit depth", save_path=os.path.join(path_design_tgt, logic+f"_logic.graph.pdf") )
+            plot_2d_dots(x_list=asics_size, y_list=asics_depth, title= f"QoR Distribution of ASIC netlist ({logic})", x_label="circuit size", y_label="circuit depth", save_path=os.path.join(path_design_tgt, logic+f"_asic.graph.pdf") )
+            plot_2d_dots(x_list=asics_area, y_list=asics_timing, title= f"QoR Distribution of ASIC netlist ({logic})", x_label="circuit area", y_label="circuit delay", save_path=os.path.join(path_design_tgt, logic+f"_asic.circuit.2d.pdf") )
+            plot_2d_dots(x_list=fpgas_area, y_list=fpgas_delay, title= f"QoR Distribution of FPGA netlist ({logic})", x_label="circuit area", y_label="circuit delay", save_path=os.path.join(path_design_tgt, logic+f"_fpga.circuit.pdf") )
         
-        return logics_size, logics_depth, asics_size, asics_depth, asics_area, asics_timing, asics_power, fpgas_area, fpgas_delay
+        return is_ok, logics_size, logics_depth, asics_size, asics_depth, asics_area, asics_timing, asics_power, fpgas_area, fpgas_delay
 
 if __name__ == '__main__':
     folder = sys.argv[1]
