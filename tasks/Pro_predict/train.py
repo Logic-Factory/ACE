@@ -37,7 +37,8 @@ class Trainer(object):
         os.makedirs(os.path.join(self.workspace, self.logic), exist_ok=True)
         self.epoch = args.epoch_size
         self.batch_size = args.batch_size
-        self.dataset = Probability_prediction(args.root, args.recipe_size, args.white_design_list, args.logic, args.dim_input)
+        # self.dataset = Probability_prediction(args.root, args.recipe_size, args.white_design_list, args.logic, args.dim_input)
+        self.dataset = Probability_prediction(args.root, args.recipe_size, curr_designs=args.white_design_list, processed_dir=args.target)
         self.model = get_model(args)
         self.model.to(device)
         self.optimizer = Adam(self.model.parameters(), lr=0.001, weight_decay=1e-5)
@@ -45,6 +46,7 @@ class Trainer(object):
         self.current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         
     def run(self):
+        # self.dataset.print_data_list()
         dataset_train, dataset_test = self.dataset.split_train_test(0.8)
         dataloader_train = DataLoader(dataset_train, batch_size=self.batch_size, shuffle=True)
         dataloader_test = DataLoader(dataset_test, batch_size=self.batch_size, shuffle=True)
@@ -131,10 +133,11 @@ class Trainer(object):
 if __name__ == '__main__':
     # config the args
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root', type=str, required=True, help='the path of the datapath')
-    parser.add_argument('--workspace', type=str, required=True, help='the path of the workspace to store the results')
+    parser.add_argument('--root', type=str, help='the path of the datapath')
+    parser.add_argument('--target', type=str, default='./data_pp', help='the path of the target datapath')
+    parser.add_argument('--workspace', type=str, default="./workspace", help='the path of the workspace to store the results')
     parser.add_argument('--logic', type=str, default="abc", help='the logic type of the selected dataset')
-    parser.add_argument('--recipe_size', type=int, default=50, help='the extracted recipe size for each design')
+    parser.add_argument('--recipe_size', type=int, default=9, help='the extracted recipe size for each design')
     parser.add_argument('--dim_input', type=int, default=64, help='the dimenssion of the feature size for each node')
     parser.add_argument('--dim_hidden', type=int, default=128, help='the dimension of the hidden layer')
     parser.add_argument('--epoch_size', type=int, default=100, help='epoch size for training')
@@ -146,8 +149,9 @@ if __name__ == '__main__':
 
     
     args = parser.parse_args()
-
-    args.white_design_list = ["i2c", "fir"]
+    args.root = '/home/niliwei/dataset/openlsd'
+    
+    args.white_design_list = ["i2c", "priority", "ss_pcm", "tv80"]
     
     trainer = Trainer(args)
     trainer.run()
