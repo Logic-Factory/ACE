@@ -3,7 +3,12 @@ current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.ticker import ScalarFormatter
+import scipy
+from scipy.spatial import ConvexHull
 
 colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#17becf',  
             '#7f7f7f', '#e377c2', '#8c564b', '#bcbd22']
@@ -83,20 +88,61 @@ def plot_2d_dots(x_list, y_list, title, x_label, y_label, save_path):
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
-def plot_multi_2d_dots(x_lists, y_lists, labels, title, x_label, y_label, save_path):
+def plot_2d_heatmap(x_list, y_list, title, x_label, y_label, save_path, fontsize = 10, cmap_coplor='Greens'):
     plt.clf()
     fig, axes = plt.subplots(1, 1, sharex=False, sharey=False, figsize=(6, 4))
     axes.grid(False)
+       
+    heatmap, xedges, yedges = np.histogram2d(x_list, y_list, bins=30)
+    im = axes.imshow(heatmap.T, origin='lower', cmap=cmap_coplor, extent=[xedges[0], xedges[-1], yedges[0], yedges[-1]], aspect='auto')
+
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits((-1,1))  # 设置科学计数法的阈值
+    axes.xaxis.set_major_formatter(formatter)
+    axes.yaxis.set_major_formatter(formatter)
+
+    # 添加颜色条
+    cbar = plt.colorbar(im, ax=axes)
+    cbar.set_label('Count')
     
-    for i in range(len(x_lists)):
-        plt.scatter(x_lists[i], y_lists[i], marker=markers[i % len(markers)], color=colors[i % len(colors)], label=labels[i])
+    axes.set_xlabel(x_label, fontsize=fontsize)
+    axes.set_ylabel(y_label, fontsize=fontsize)
+    
+    if title != '':
+        axes.set_title(title, fontsize=fontsize)
+    
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
 
-    if len(labels) > 1:
-        axes.legend(loc='center left', fancybox = True, shadow = False, bbox_to_anchor=(1, 0.5))
+def plot_multi_2d_dots(x_lists, y_lists, labels, title, x_label, y_label, save_path, fontsize = 10, isLegend = True):
+    plt.clf()
+    fig, axes = plt.subplots(figsize=(10, 8))
+    
+    assert len(x_lists) == len(y_lists) == len(labels), "Length of x_lists, y_lists, and labels must be the same."
+    
+    for x, y, label, color in zip(x_lists, y_lists, labels, colors):
+        data = np.column_stack((x, y))
+        axes.scatter(x, y, label=label, color=color, alpha=0.5)
+        
+        if len(x) > 2 and np.unique(data, axis=0).shape[0] > 1:
+            try:
+                hull = ConvexHull(data)
+                # 绘制凸包的边
+                for simplex in hull.simplices:
+                    axes.plot(data[simplex, 0], data[simplex, 1], color=color)
+            except scipy.spatial.qhull.QhullError:
+                print("Cannot create a convex hull for the data with all points coincident.")
 
-    axes.set_xlabel(x_label)
-    axes.set_ylabel(y_label)
-    axes.set_title(title)
+    if isLegend:
+        axes.legend(loc='center left', fancybox = True, shadow = False, bbox_to_anchor=(1, 0.5), fontsize=fontsize)
+
+    axes.set_xlabel(x_label, fontsize=fontsize)
+    axes.set_ylabel(y_label, fontsize=fontsize)
+    
+    if title != '':
+        axes.set_title(title, fontsize=fontsize)
+    
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
     
@@ -116,5 +162,65 @@ def plot_3d_dots(x_list, y_list, z_list, title, x_label, y_label, z_label, save_
 
     color_bar = plt.colorbar(scatter, ax=axes, shrink=0.5, aspect=10)
     
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+def plot_3d_heatmap(x_list, y_list, z_list, title, x_label, y_label, z_label, save_path):
+    plt.clf()
+    
+    fig = plt.figure(figsize=(6, 4))
+    axes = fig.add_subplot(111, projection='3d')
+
+    x_list = np.array(x_list)
+    y_list = np.array(y_list)
+    z_list = np.array(z_list)
+    
+    # 计算综合评分
+    scores = 1 / (0.33 * x_list + 0.34 * y_list + 0.33 * z_list)
+
+    # 归一化分数
+    norm_scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))    
+    scores_count = np.bincount(np.digitize(scores, np.histogram_bin_edges(scores, bins=10)))
+    freq = scores_count[np.digitize(scores, np.histogram_bin_edges(scores, bins=10)) - 1]  # 频率为对应分数的点数量
+
+    # 使用颜色和点的大小进行可视化，大小和透明度与评分频率成正比
+    scatter = axes.scatter(x_list, y_list, z_list, c=norm_scores, cmap='RdYlGn', s=freq * 20, alpha= np.clip(0.5 + 0.5 * norm_scores, 0, 1))
+
+    formatter = ScalarFormatter(useMathText=True)
+    formatter.set_scientific(True)
+    formatter.set_powerlimits((-1,1))
+    axes.xaxis.set_major_formatter(formatter)
+    axes.yaxis.set_major_formatter(formatter)
+    axes.zaxis.set_major_formatter(formatter)
+
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.set_zlabel(z_label)
+
+    plt.title(title)
+    axes.view_init(elev=30, azim=45)
+
+    color_bar = plt.colorbar(scatter, ax=axes, shrink=0.5, aspect=10)
+    color_bar.set_label('Performance Score (Higher is Better)')
+    
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+    
+def plot_matrix(matrix, x_labels, y_labels, save_path, cmap_color:str = 'coolwarm'):
+    colors = ["#ffffff", "#ff6666", "#ff0000"]  # white -> red
+    # colors = ["#ffffff", "#806666", "#800000"]  # white -> Maroon
+    cmap_name = "linear_red"
+    linear_red = LinearSegmentedColormap.from_list(cmap_name, colors, N=256)
+    plt.clf()
+    fig = plt.figure(figsize=(10, 10))
+    if cmap_color == 'coolwarm':
+        plt.imshow(matrix, cmap='coolwarm', interpolation='none')
+    else:
+        plt.imshow(matrix, cmap=linear_red, interpolation='none')
+    plt.colorbar(shrink=0.8)
+    if x_labels:
+        plt.xticks(ticks=np.arange(len(x_labels)), labels=x_labels, ha="right", rotation_mode="anchor", rotation=45, fontsize=6)
+        plt.yticks(ticks=np.arange(len(y_labels)), labels=y_labels, rotation=45, fontsize=6)
+    plt.tight_layout()
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
