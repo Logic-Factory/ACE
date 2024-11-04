@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from torch.optim.adam import Adam
 from torch.optim import SGD
 
-from dataset import RepresentationDataset
+from dataset import RankingDataset
 from net import CircuitRankNet
 
 from datetime import datetime
@@ -28,20 +28,37 @@ from torch_geometric.loader import DataLoader
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Trainer(object):
-    def __init__(self, root_openlsd:str, recipe_size:int, curr_designs:List[str], processed_dir:str, feature_size:int, epoch:int, batch_size:int, workspace:str):
-        self.curr_designs = curr_designs
+    def __init__(self, root_openlsd:str, processed_dir:str, designs:List[str], logics: List[str], recipes:int, feature_size:int, epoch_size:int, batch_size:int, workspace:str):
+        self.root_openlsd = root_openlsd
         self.processed_dir = processed_dir
+        self.designs = designs
+        self.logics = logics
+        self.recipes = recipes
+        
         self.feature_size = feature_size
-        self.epoch = epoch
+        self.epoch = epoch_size
         self.batch_size = batch_size
         
         self.current_time = datetime.now().strftime('%Y_%m%d_%H%M%S')
         self.workspace = os.path.join(workspace, self.current_time)
 
         # load the dataset first
-        self.dataset = RepresentationDataset(root_openlsd, recipe_size, curr_designs, processed_dir)
+        self.dataset = RankingDataset(root_openlsd=root_openlsd, processed_dir=processed_dir, designs=designs, logics=logics, recipes=recipes)
+        # set the model
         self.model = CircuitRankNet(feature_size).to(device)
         self.optimizer = Adam(self.model.parameters(), lr=0.0001, weight_decay=1e-5)
+        
+        print("Configuration of Circuit Ranking:")
+        print(f"root_openlsd: {self.root_openlsd}")
+        print(f"processed_dir: {self.processed_dir}")
+        print(f"designs: {self.designs}")
+        print(f"logics: {self.logics}")
+        print(f"recipes: {self.recipes}")
+        print(f"feature_size: {self.feature_size}")
+        print(f"epoch: {self.epoch}")
+        print(f"batch_size: {self.batch_size}")
+        print(f"workspace: {self.workspace}")
+        print(f"device: {device}")
         
     def preproccess_graph(self):
         for data in self.dataset:
@@ -117,8 +134,8 @@ class Trainer(object):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_openlsd', type=str, required=True, help='the path of the datapath')
-    parser.add_argument('--recipe_size', type=int, default=50, help='the extracted recipe size for each design')
     parser.add_argument('--processed_dir', type=str, help='the dimenssion of the feature size for each node')
+    parser.add_argument('--recipes', type=int, default=50, help='the extracted recipe size for each design')
     parser.add_argument('--feature_size', type=int, default=64, help='the dimenssion of the feature size for each node')
     parser.add_argument('--epoch_size', type=int, default=100, help='epoch size for training')
     parser.add_argument('--batch_size', type=int, default=1, help='the batch size of the dataloader')
@@ -126,7 +143,19 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
+    curr_logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+    curr_designs = [
+        "ctrl",
+        "steppermotordrive"
+        ]
     
-    trainer = Trainer(args.root_openlsd, args.recipe_size, curr_designs, args.processed_dir, args.feature_size, args.epoch_size, args.batch_size, args.workspace)
+    trainer = Trainer(root_openlsd=args.root_openlsd,
+                      processed_dir=args.processed_dir,
+                      designs=curr_designs,
+                      logics=curr_logics,
+                      recipes=args.recipes,
+                      feature_size=args.feature_size,
+                      epoch_size=args.epoch_size,
+                      batch_size=args.batch_size,
+                      workspace=args.workspace)
     trainer.run()

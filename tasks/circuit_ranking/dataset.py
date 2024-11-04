@@ -6,6 +6,7 @@ sys.path.append(proj_dir)
 
 
 import pandas as pd
+from glob import glob
 import torch
 from torch_geometric.data import Data
 from torch.utils.data import Dataset
@@ -20,25 +21,25 @@ from src.circuit.circuit import Circuit
 from src.dataset.dataset import OpenLS_Dataset
 from src.utils.numeric import float_approximately_equal
 
-class RepresentationDataset(Dataset):
-    """Functional Classification Dataset for the functional classification task
-
-    Args:
-        OpenLS_Dataset (_type_): _description_
-    """
-    def __init__(self, root_openlsd:str, recipe_size:int, curr_designs:List[str], processed_dir:str):
+class RankingDataset(Dataset):
+    def __init__(self, root_openlsd:str, processed_dir:str, designs:List[str], logics:List[str], recipes:int):
         """_summary_
-
+        
         Args:
             root_openlsd (str): root folder of openlsd dataset
-            curr_designs (list[str]): current white list for the classification
+            processed_dir (str): processed data folder for current task
+            designs (list[str]): current white list for current task
             logic (str): logic type
+            recipes: (int): recipe size
         """
+        super(RankingDataset, self).__init__()
         self.root_openlsd:str = os.path.abspath(root_openlsd)
-        self.recipe_size:int = int(recipe_size)
-        self.curr_designs:List[str] = curr_designs
         self.processed_dir:str = os.path.abspath(processed_dir) # store the processed data_list
-        self.logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+        self.designs:List[str] = designs
+        self.logics = logics
+        self.recipes:int = int(recipes)
+        
+        # store the items of this current task
         self.data_list = []
                         
         os.makedirs(self.processed_dir, exist_ok=True)    
@@ -52,39 +53,25 @@ class RepresentationDataset(Dataset):
 
     def design_recipe_logic_pair_name(self, design:str, recipe:int, logic_0, logic_1, polar:str):
         return f"{design}_recipe_{recipe}_{logic_0}_{logic_1}_{polar}"
-    
-    @property
-    def raw_case_list(self):
-        cases = []
-        for design in self.curr_designs:
-            for i in range( self.recipe_size ):
-                conbinations = list(itertools.combinations(self.logics, 2))
-                for pairs_logic in conbinations:
-                    cases.append( self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "pos") )
-                    cases.append( self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "neg") )
-        return cases
-    
+        
     @property
     def processed_data_list(self):
-        cases = self.raw_case_list
-        processed_files = []
-        for i in range(len(cases)):
-            path_pt = os.path.join(self.processed_dir, f"{cases[i]}.pt")
-            processed_files.append(path_pt)
+        pattern = os.path.join(self.processed_dir, f'*.pt')
+        processed_files = [file for file in glob(pattern, recursive=True)]
         return processed_files
     
     @property
     def processed_data_exist(self):
-        return all(os.path.exists(path) for path in self.processed_data_list)
+        return len(self.processed_data_list) > 0 and all(os.path.exists(path) for path in self.processed_data_list)
     
     def load_data(self):
         if self.processed_data_exist:
-            print("load circuit representation from pt file")
+            print("load circuit ranking from pt file")
             self.load_processed_data()
         else:
-            print("load circuit representation from openls-d file")
-            self.openlsd:Dataset = OpenLS_Dataset(self.root_openlsd, self.recipe_size, self.curr_designs)
-            print("load the circuit representation db from openls-d file")
+            print("load openls-d file first")
+            self.openlsd:Dataset = OpenLS_Dataset(root=self.root_openlsd, designs=self.designs, logics=self.logics, recipes=self.recipes)
+            print("load the circuit ranking db from openls-d file")
             self.load_adaptive_subdataset()
 
     def load_processed_data(self):
@@ -104,34 +91,33 @@ class RepresentationDataset(Dataset):
         """
         for entry in self.openlsd:
             design = entry["design_name"]
-            if design not in self.curr_designs:
+            if design not in self.designs:
                 continue
             recipes_pack = entry["design_recipes"]
-            for i in range(self.recipe_size):
+            for i in range(self.recipes):
                 conbinations = list(itertools.combinations(self.logics, 2))
                 for pairs_logic in conbinations:
                     select0 = True  # flag to select the circuit
-                    data_0 = recipes_pack[i][pairs_logic[0]]
-                    data_1 = recipes_pack[i][pairs_logic[1]]
+                    data_0 = recipes_pack[pairs_logic[0]][i]
+                    data_1 = recipes_pack[pairs_logic[1]][i]
                     circuit_0: Circuit = data_0["circuit"].values[0]
                     circuit_1: Circuit = data_1["circuit"].values[0]
                     graph_0 = circuit_0.to_torch_geometric()
                     graph_1 = circuit_1.to_torch_geometric()
                     
-                    area_0, timing_0, power_0 = data_0["area"].values[0], data_0["timing"].values[0], data_0["power"].values[0]
-                    area_1, timing_1, power_1 = data_1["area"].values[0], data_1["timing"].values[0], data_1["power"].values[0]
+                    area_0, timing_0= data_0["area"].values[0], data_0["timing"].values[0]
+                    area_1, timing_1= data_1["area"].values[0], data_1["timing"].values[0]
                     
                     # skip the circuit pair with the same QoR
-                    if( float_approximately_equal(timing_0, timing_1) and float_approximately_equal(power_0, power_1) and float_approximately_equal(area_0, area_1) ):
+                    if( float_approximately_equal(timing_0, timing_1) and float_approximately_equal(area_0, area_1) ):
                         continue
                     
                     # tie break for the order
                     if timing_0 > timing_1:
                         select0 = False
-                    elif power_0 > power_1:
-                        select0 = False
-                    elif area_0 > area_1:
-                        select0 = False
+                    else:
+                        if area_0 > area_1:
+                            select0 = False
 
                     if select0:
                         graph_0.y = torch.tensor(1, dtype=torch.float)
@@ -175,8 +161,12 @@ class RepresentationDataset(Dataset):
         return train_dataset, test_dataset
 
 if __name__ == "__main__":
-    folder:str = sys.argv[1]
-    recipe_size:int = sys.argv[2]
-    target:str = sys.argv[3]
-    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
-    db = RepresentationDataset(root_openlsd=folder, recipe_size=recipe_size, curr_designs=curr_designs, processed_dir=target)
+    root_openlsd:str = sys.argv[1]
+    processed_dir:str = sys.argv[2]
+    recipes:int = sys.argv[3]
+    curr_logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+    curr_designs = [
+        "ctrl",
+        "steppermotordrive"
+        ]
+    db = RankingDataset(root_openlsd=root_openlsd, processed_dir=processed_dir, designs=curr_designs, logics=curr_logics, recipes=recipes)
