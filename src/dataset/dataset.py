@@ -178,7 +178,6 @@ class OpenLS_Dataset(Dataset):
         logic_file = ""
         area_file = ""
         timing_file = ""
-        power_file = ""
         seq_file = ""
         
         if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.logic.graphml") ):
@@ -207,15 +206,6 @@ class OpenLS_Dataset(Dataset):
             timing_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.timing.qor.json.gz")
         else:
             print("no timing file")
-
-        if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json") ):
-            power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json")
-        elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.zst") ):
-            power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.zst")
-        elif os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.gz") ):
-            power_file = os.path.join(path_one_design, logic, f"recipe_{index}.asic.power.qor.json.gz")
-        else:
-            print("no power file")
         
         if os.path.exists( os.path.join(path_one_design, logic, f"recipe_{index}.seq") ):
             seq_file = os.path.join(path_one_design, logic, f"recipe_{index}.seq")
@@ -227,14 +217,13 @@ class OpenLS_Dataset(Dataset):
             if logic == "abc":
                 print("no seq file")
 
-        if logic_file == "" or area_file == "" or timing_file == "" or power_file == "":
+        if logic_file == "" or area_file == "" or timing_file == "":
             print("design recipe not complete: ", f"{design}_recipe_{index}")
             assert(False)
 
         circuit = load_graphml(logic_file)
         area = load_qor(area_file).get_area()
         timing = load_qor(timing_file).get_timing()
-        power = load_qor(power_file).get_power_total()
         
         seq = ""
         if logic == "abc":
@@ -244,8 +233,7 @@ class OpenLS_Dataset(Dataset):
             "type": [logic],
             "seq": [seq],
             "area": [area],
-            "timing": [timing],
-            "power": [power]
+            "timing": [timing]
         })
         return data
 
