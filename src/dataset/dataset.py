@@ -23,7 +23,7 @@ from src.io.load_qor import QoR, load_qor
 from src.io.load_seq import load_seq
 
 class OpenLS_Dataset(Dataset):
-    def __init__(self, root:str, recipe_size:int = 1000, logics:List[str] = [], design_list:List[str] = []):
+    def __init__(self, root:str, designs:List[str] = [], logics:List[str] = [], recipes:int = 1000):
         """_summary_
 
         Args:
@@ -32,24 +32,19 @@ class OpenLS_Dataset(Dataset):
             transform (_type_, optional): _description_. Defaults to None.
             pre_transform (_type_, optional): _description_. Defaults to None.
         """
+        super(OpenLS_Dataset, self).__init__()
         self.root = os.path.abspath(root)
-        self.processed_dir = os.path.join(self.root, "processed_dir")
-        self.recipe_size = int(recipe_size)
+        self.designs = designs
         self.logics = logics
+        self.recipes = int(recipes)
         
-        self.design_list = design_list       # store the used designs
-        if design_list == []:
-            self.design_list = self.raw_all_case_list()
-        else:
-            # assert all([design in self.raw_all_case_list() for design in design_list]), f"design {design} not in the dataset"
-            for design in design_list:
-                if design not in self.raw_all_case_list():
-                    raise ValueError(f"design {design} not in the dataset")
-
-        super().__init__()
-                
+        # store all the items
         self.data_list = []
+        
+        # directly create the processed dir at the raw files' folder
+        self.processed_dir = os.path.join(self.root, "processed_dir")                
         os.makedirs(self.processed_dir, exist_ok=True)
+        # load the dataset
         self.load_data()
         
     def __len___(self):
@@ -58,38 +53,34 @@ class OpenLS_Dataset(Dataset):
     def __getitem__(self, idx):
         return self.data_list[idx]
 
-    def raw_all_case_list(self):
-        cases = []
-        for design in os.listdir(self.root):
-            if design == "processed_dir":
-                continue
-            cases.append(design)
-        return cases
-
     @property
-    def processed_data_list(self):
-        cases = []
-        for design in self.design_list:
-            if not os.path.isdir(os.path.join(self.root, design)):
-                continue
-            cases.append(design)
-
+    def processed_design_list(self):
+        for design in self.designs:
+            assert design != self.processed_dir
+            assert os.path.isdir( os.path.join(self.root, design) )
         processed_files = []
-        for i in range(len(cases)):
-            case_files = []
-            case_raw_pt = os.path.join(self.processed_dir, f"{cases[i]}_raw_{self.recipe_size}.pt")
-            case_files.append(case_raw_pt)
+        for i in range(len(self.designs)):
+            raw_pt = os.path.join(self.processed_dir, f"{self.designs[i]}_raw_{self.recipes}.pt")
+            logic_pts = {}  
             for logic in self.logics:
-                case_logic_pt = os.path.join(self.processed_dir, f"{cases[i]}_{logic}_{self.recipe_size}.pt")
-                case_files.append(case_logic_pt)
-            processed_files.append(case_files)
+                pt_logic_file = os.path.join(self.processed_dir, f"{self.designs[i]}_{logic}_{self.recipes}.pt")
+                logic_pts[logic] = pt_logic_file
+            data = {
+                "design": self.designs[i],
+                "raw": raw_pt,
+                "logics": logic_pts
+            }
+            processed_files.append(data)
         return processed_files
     
     @property
     def processed_data_exist(self):
-        for case_files in self.processed_data_list:
-            if not all(os.path.exists(path) for path in case_files):
+        for data in self.processed_design_list:
+            if not os.path.exists(data["raw"]):
                 return False
+            for logic in self.logics:
+                if not os.path.exists(data["logics"][logic]):
+                    return False
         return True
     
     def load_data(self):
@@ -98,7 +89,7 @@ class OpenLS_Dataset(Dataset):
             self.load_processed_data()
         else:
             print("load openls-d from source file")
-            cases = self.design_list
+            cases = self.designs
             count = 1
             for design in cases:
                 if not os.path.isdir(os.path.join(self.root, design)):
@@ -110,28 +101,19 @@ class OpenLS_Dataset(Dataset):
         self.data_list.sort(key=lambda x: x["design_name"])
         
     def load_processed_data(self):
-        processed_data = self.processed_data_list
-        
-        def load_processed_design(case_files):
-            data_raw = torch.load(case_files[0], weights_only=False)
-            recipe_list = []
-            for i in range(1, len(case_files)):
-                data_logic = torch.load(case_files[i], weights_only=False)
-                recipe_list.append(data_logic)
-            data = {
+        for data in tqdm(self.processed_design_list):
+            design_name = data["design"]
+            data_raw = torch.load(data["raw"], weights_only=False)
+            recipe_list = {}
+            for logic in self.logics:
+                recipe_list[logic] = torch.load(data["logics"][logic], weights_only=False)
+            item = {
                 "design_name": data_raw["design_name"],
                 "design_gtech": data_raw["design_gtech"],
                 "design_aig": data_raw["design_aig"],
                 "design_recipes": recipe_list
             }
-            self.data_list.append(data)
-        
-        with ThreadPoolExecutor(max_workers=16) as executor:
-            futures = []
-            for case_files in tqdm(processed_data, desc="loading"):
-                futures.append(executor.submit(load_processed_design, case_files))
-            for future in as_completed(futures):
-                future.result()
+            self.data_list.append(item)
     
     def load_one_design(self, folder, desgin):
         recipe_list = []
@@ -167,20 +149,20 @@ class OpenLS_Dataset(Dataset):
             "design_gtech":src_gtech,
             "design_aig":src_aig
         }
-        path_raw_pt = os.path.join(self.processed_dir, f"{desgin}_raw_{self.recipe_size}.pt")
+        path_raw_pt = os.path.join(self.processed_dir, f"{desgin}_raw_{self.recipes}.pt")
         torch.save(data_raw, path_raw_pt)
         
         # load the recipes parallelly
-        recipe_list = []
+        recipe_list = {}
         for logic in self.logics:
             with ThreadPoolExecutor(max_workers=32) as executor:
                 futures = []
-                for i in range(self.recipe_size):
+                for i in range(self.recipes):
                     futures.append( executor.submit(self.load_one_logic, folder, logic, desgin, i) )
-                logic_list = [future.result() for future in tqdm(futures, desc=f"loading {desgin} {logic}")]
-                path_logic_pt = os.path.join(self.processed_dir, f"{desgin}_{logic}_{self.recipe_size}.pt")
-                torch.save(logic_list, path_logic_pt)
-                recipe_list.append(logic_list)
+                logic_circuit_list = [future.result() for future in tqdm(futures, desc=f"loading {desgin} {logic}")]                
+                path_logic_pt = os.path.join(self.processed_dir, f"{desgin}_{logic}_{self.recipes}.pt")
+                torch.save(logic_circuit_list, path_logic_pt)
+                recipe_list[logic] = logic_circuit_list
         
         data = {
             "design_name": desgin,
@@ -192,8 +174,6 @@ class OpenLS_Dataset(Dataset):
 
     def load_one_logic(self, folder, logic, design, index):
         path_one_design = os.path.join(folder, design)
-        isOK = True
-        pack = {}
         
         logic_file = ""
         area_file = ""
@@ -249,33 +229,31 @@ class OpenLS_Dataset(Dataset):
 
         if logic_file == "" or area_file == "" or timing_file == "" or power_file == "":
             print("design recipe not complete: ", f"{design}_recipe_{index}")
-            isOK = False
+            assert(False)
 
-        if isOK:
-            circuit = load_graphml(logic_file)
-            area = load_qor(area_file).get_area()
-            timing = load_qor(timing_file).get_timing()
-            power = load_qor(power_file).get_power_total()
-            
-            seq = ""
-            if logic == "abc":
-                seq = load_seq(seq_file)
-            data = pd.DataFrame({
-                "circuit": [circuit],
-                "type": [logic],
-                "seq": [seq],
-                "area": [area],
-                "timing": [timing],
-                "power": [power]
-            })
-            pack[logic] = data
-        return pack
+        circuit = load_graphml(logic_file)
+        area = load_qor(area_file).get_area()
+        timing = load_qor(timing_file).get_timing()
+        power = load_qor(power_file).get_power_total()
+        
+        seq = ""
+        if logic == "abc":
+            seq = load_seq(seq_file)
+        data = pd.DataFrame({
+            "circuit": [circuit],
+            "type": [logic],
+            "seq": [seq],
+            "area": [area],
+            "timing": [timing],
+            "power": [power]
+        })
+        return data
 
 if __name__ == "__main__":
     folder:str = sys.argv[1]
     recipe_size:int = sys.argv[2]
     logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
-    design_list = [
+    designs = [
         "ctrl",
         "steppermotordrive",
         "router",
@@ -323,4 +301,4 @@ if __name__ == "__main__":
         "vga_lcd",
         "jpeg"
     ]
-    db = OpenLS_Dataset(folder, recipe_size, logics, design_list)
+    db = OpenLS_Dataset(folder, designs, logics, recipe_size)
