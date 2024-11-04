@@ -18,25 +18,24 @@ from src.dataset.dataset import OpenLS_Dataset
 
 
 class ClassificationDataset(Dataset):
-    """Functional Classification Dataset for the functional classification task
-
-    Args:
-        OpenLS_Dataset (_type_): _description_
-    """
-    def __init__(self, root_openlsd:str, recipe_size:int, curr_designs:List[str], processed_dir:str, logic:str):
+    def __init__(self, root_openlsd:str, processed_dir:str, designs:List[str], logic:str, recipes:int):
         """_summary_
-
+        
         Args:
             root_openlsd (str): root folder of openlsd dataset
-            curr_designs (list[str]): current white list for the classification
+            processed_dir (str): processed data folder for current task
+            designs (list[str]): current white list for current task
             logic (str): logic type
+            recipes: (int): recipe size
         """
-        
+        super(ClassificationDataset, self).__init__()
         self.root_openlsd:str = os.path.abspath(root_openlsd)
-        self.recipe_size:int = int(recipe_size)
-        self.curr_designs:List[str] = curr_designs
         self.processed_dir:str = os.path.join(processed_dir, logic) # store the processed data_list
+        self.designs:List[str] = designs
         self.logic:str = logic
+        self.recipes:int = int(recipes)
+    
+        # store the items of this current task
         self.data_list = []
                         
         os.makedirs(self.processed_dir, exist_ok=True)    
@@ -54,8 +53,8 @@ class ClassificationDataset(Dataset):
     @property
     def raw_case_list(self):
         cases = []
-        for design in self.curr_designs:
-            for i in range( self.recipe_size ):
+        for design in self.designs:
+            for i in range( self.recipes ):
                 cases.append(f"{self.design_recipe_name(design, i)}")
         return cases
     
@@ -77,8 +76,8 @@ class ClassificationDataset(Dataset):
             print("load circuit classification from pt file")
             self.load_processed_data()
         else:
-            print("load circuit classification from openls-d file")
-            self.openlsd:Dataset = OpenLS_Dataset(self.root_openlsd, self.recipe_size, self.curr_designs)
+            print("load openls-d file first")
+            self.openlsd:Dataset = OpenLS_Dataset(root=self.root_openlsd, designs=self.designs, logics=[self.logic])
             print("load the circuit classification db from openls-d file")
             self.load_adaptive_subdataset()
 
@@ -100,12 +99,12 @@ class ClassificationDataset(Dataset):
         """
         for entry in self.openlsd:
             design = entry["design_name"]
-            if design not in self.curr_designs:
+            if design not in self.designs:
                 continue
             recipes_pack = entry["design_recipes"]
-            label_int = self.curr_designs.index(design)
-            for i in range(self.recipe_size):
-                data = recipes_pack[i][self.logic]
+            label_int = self.designs.index(design)
+            for i in tqdm(range(self.recipes), desc=f"process at {design}"):
+                data = recipes_pack[self.logic][i]
                 circuit: Circuit = data["circuit"].values[0]
                 graph = circuit.to_torch_geometric()
                 graph.y = torch.tensor(label_int, dtype=torch.long)       # label this graph
@@ -114,7 +113,7 @@ class ClassificationDataset(Dataset):
                 torch.save(graph, path_pt)
     
     def num_classes(self):
-        return len(self.curr_designs)
+        return len(self.designs)
     
     def split_train_test(self, train_ratio: float = 0.8) -> Tuple[List[Data], List[Data]]:
         """Split the dataset into training and testing sets."""
@@ -125,10 +124,18 @@ class ClassificationDataset(Dataset):
         train_dataset = [self.data_list[i] for i in train_indices]
         test_dataset = [self.data_list[i] for i in test_indices]
         return train_dataset, test_dataset
-    
+
 if __name__ == "__main__":
     folder:str = sys.argv[1]
     recipe_size:int = sys.argv[2]
     target:str = sys.argv[3]
-    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
+    curr_designs = [
+        "ctrl",
+        "steppermotordrive",
+        "router",
+        "int2float",
+        "ss_pcm",
+        "usb_phy",
+        "sasc",
+        ]
     db = ClassificationDataset(root_openlsd=folder, recipe_size=recipe_size, curr_designs=curr_designs, processed_dir=target, logic="abc")

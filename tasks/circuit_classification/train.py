@@ -29,30 +29,46 @@ from sklearn.decomposition import PCA
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 class Trainer(object):
-    def __init__(self, root_openlsd:str, recipe_size:int, curr_designs:List[str], processed_dir:str, logic:str, dim_input:int, dim_hidden:int, epoch:int, batch_size:int, workspace:str):
-        self.curr_designs = curr_designs
+    def __init__(self, root_openlsd:str, processed_dir:str, designs:List[str], logic:str, recipes:int, dim_input:int, dim_hidden:int, epoch_size:int, batch_size:int, workspace:str):
+        self.root_openlsd = root_openlsd
         self.processed_dir = processed_dir
+        self.designs = designs
         self.logic = logic
+        self.recipes = recipes
+        
         self.dim_input = dim_input
         self.dim_hidden = dim_hidden
-        self.epoch = epoch
+        self.epoch = epoch_size
         self.batch_size = batch_size
         
         self.current_time = datetime.now().strftime('%Y_%m%d_%H%M%S')
         self.workspace = os.path.join(workspace, logic, self.current_time)
-        os.makedirs(self.workspace, exist_ok=True)
+
         
         # load the dataset first
-        self.dataset = ClassificationDataset(root_openlsd, recipe_size, curr_designs, processed_dir, logic)
+        self.dataset = ClassificationDataset(root_openlsd=self.root_openlsd, processed_dir=self.processed_dir, designs=self.designs, logic=self.logic, recipes=self.recipes)
         self.model = ClassificationNet(dim_input, dim_hidden, self.dataset.num_classes()).to(device)
         self.optimizer = Adam(self.model.parameters(), lr=0.001, weight_decay=1e-5)
+
+        print("Configuration of Circuit Classification:")
+        print(f"root_openlsd: {self.root_openlsd}")
+        print(f"processed_dir: {self.processed_dir}")
+        print(f"designs: {self.designs}")
+        print(f"logics: {self.logic}")
+        print(f"recipes: {self.recipes}")
+        print(f"dim_input: {self.dim_input}")
+        print(f"dim_hidden: {self.dim_hidden}")
+        print(f"epoch: {self.epoch}")
+        print(f"batch_size: {self.batch_size}")
+        print(f"workspace: {self.workspace}")
+        print(f"device: {device}")
+    
     
     def preproccess_graph(self):
         for graph in self.dataset:
             graph = padding_feature_to(graph, self.dim_input)
     
     def run(self):
-        
         self.preproccess_graph()
         
         dataset_train, dataset_test = self.dataset.split_train_test(0.8)
@@ -62,6 +78,10 @@ class Trainer(object):
         torch.manual_seed(12345)
         total_loss_train, total_acc_train = [], []
         total_loss_test, total_acc_test = [], []
+        
+        os.makedirs(self.workspace, exist_ok=True)
+        
+        print("Start training:")
         for epoch in range(self.epoch):
             loss_train, acc_train = self.train(dataloader_train)
             loss_test, acc_test = self.eval(dataloader_test)
@@ -159,7 +179,24 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
+    curr_designs = [
+        "ctrl",
+        # "steppermotordrive",
+        "router",
+        # "int2float",
+        "ss_pcm",
+        # "usb_phy",
+        "sasc",
+        ]
     
-    trainer = Trainer(args.root_openlsd, args.recipe_size, curr_designs, args.processed_dir, args.logic, args.dim_input, args.dim_hidden, args.epoch_size, args.batch_size, args.workspace)
+    trainer = Trainer(root_openlsd=args.root_openlsd,
+                      processed_dir=args.processed_dir,
+                      designs=curr_designs,
+                      logic=args.logic,
+                      recipes=args.recipe_size,
+                      dim_input=args.dim_input,
+                      dim_hidden=args.dim_hidden,
+                      epoch_size=args.epoch_size,
+                      batch_size=args.batch_size,
+                      workspace=args.workspace)
     trainer.run()
