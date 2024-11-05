@@ -151,7 +151,8 @@ class Probability_prediction(Dataset):
                 continue
             recipes_pack = entry["design_recipes"]
             label_int = self.curr_designs.index(design)
-            for i in range(self.recipe_size):
+            # for i in range(self.recipe_size):
+            for i in tqdm(range(self.recipes), desc=f"process at {design}"):
                 data = recipes_pack[i]["aig"]
                 circuit: Circuit = data["circuit"].values[0]
                 graph = circuit.to_torch_geometric()
