@@ -14,6 +14,7 @@ from simulate_tt import simulate_tt
 import pandas as pd
 import numpy as np
 import itertools
+import multiprocessing
 from tqdm import tqdm
 
 from src.circuit.circuit import Circuit
@@ -25,9 +26,11 @@ from src.io.load_graphml import load_graphml
 from torch_geometric.data import Data
 from torch.utils.data import Dataset
 from src.dataset.dataset import OpenLS_Dataset
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor, as_completed
 from src.utils.numeric import float_approximately_equal
 
+
+      
 
 class PP_Data(Data):
   def __init__(self,x=None,x_feature = None,edge_index=None,y=None,label=None,forward_level=None,backward_level=None,forward_index =None,backward_index = None,gate=None,tt= None):
@@ -67,20 +70,22 @@ class Probability_prediction(Dataset):
     Args:
         OpenLS_Dataset (_type_): _description_
     """
-    def __init__(self, root_openlsd, recipe_size, curr_designs, processed_dir):
+    def __init__(self, root_openlsd,processed_dir,designs,logic, recipes):
         """_summary_
 
         Args:l
             root_openlsd (str): root folder of openlsd dataset
-            curr_designs (list[str]): current white list for the classification
+            designs (list[str]): current white list for the classification
             logic (str): logic type
         """
         self.root_openlsd:str = os.path.abspath(root_openlsd)
-        self.recipe_size:int = int(recipe_size)
-        self.curr_designs:List[str] = curr_designs
+        self.recipes:int = int(recipes)
+        self.designs:List[str] = designs
         self.processed_dir:str = os.path.abspath(processed_dir) # store the processed data_list
         self.feature_size = 64
-        self.logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+        # self.logic = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+        self.logic = 'aig'
+        self.logic = "aig"
         self.data_list = []
                         
         os.makedirs(self.processed_dir, exist_ok=True)    
@@ -100,8 +105,8 @@ class Probability_prediction(Dataset):
     @property
     def raw_case_list(self):
         cases = []
-        for design in self.curr_designs:
-            for i in range( self.recipe_size ):
+        for design in self.designs:
+            for i in range( self.recipes ):
                 cases.append(f"{self.design_recipe_name(design, i)}")
         return cases
     
@@ -111,7 +116,8 @@ class Probability_prediction(Dataset):
         processed_files = []
         for i in range(len(cases)):
             path_pt = os.path.join(self.processed_dir, f"{cases[i]}.pt")
-            processed_files.append(path_pt)
+            if os.path.exists(path_pt):
+                processed_files.append(path_pt)
         return processed_files
     
     @property
@@ -119,18 +125,22 @@ class Probability_prediction(Dataset):
         return all(os.path.exists(path) for path in self.processed_data_list)
     
     def load_data(self):
-        if self.processed_data_exist:
+        # if self.processed_data_exist:
+        if True:
             print("load circuit representation from pt file")
             self.load_processed_data()
         else:
             print("load circuit representation from openls-d file")
-            self.openlsd:Dataset = OpenLS_Dataset(self.root_openlsd, self.recipe_size, self.curr_designs)
+            self.openlsd:Dataset = OpenLS_Dataset(self.root_openlsd, designs=self.designs, logics=[self.logic])
             print("load the circuit representation db from openls-d file")
             self.load_adaptive_subdataset()
 
     def load_processed_data(self):
         processed_data = self.processed_data_list
+        print('len(processed_data)',len(processed_data))
         def load_processed_one_design_recipe(one_design_recipe):
+            if not os.path.exists(one_design_recipe):
+                return
             data = torch.load(one_design_recipe, weights_only=False)
             self.data_list.append(data)        
         with ThreadPoolExecutor(max_workers=16) as executor:
@@ -141,18 +151,26 @@ class Probability_prediction(Dataset):
                 future.result()
 
 
+
+
+
     def load_adaptive_subdataset(self):
         """load adaptive subdataset from openls-d: extract and label
         """
-        for entry in self.openlsd:
+        count = 0
+        
+        def load_adaptive_subdataset_pool(entry):
             # print("entry",entry)
             design = entry["design_name"]
-            if design not in self.curr_designs:
-                continue
+            if design not in self.designs:
+                return
             recipes_pack = entry["design_recipes"]
-            label_int = self.curr_designs.index(design)
-            for i in range(self.recipe_size):
-                data = recipes_pack[i]["aig"]
+            label_int = self.designs.index(design)
+            for i in tqdm(range(self.recipes), desc=f"process at {design}"):
+                path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
+                if os.path.exists(path_pt):
+                  continue
+                data = recipes_pack[self.logic][i]
                 circuit: Circuit = data["circuit"].values[0]
                 graph = circuit.to_torch_geometric()
                 x = circuit.get_node_features()
@@ -167,10 +185,47 @@ class Probability_prediction(Dataset):
                 gate = circuit.get_gate()
                 x_feature = padding_feature_to_nochange(x, self.feature_size)
                 graph = PP_Data(x,x_feature,edge_index,y,label,forward_level,backward_level,forward_index,backward_index,gate,tt)
+
                     # padding feature to the same size
                 self.data_list.append(graph)
                 path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
                 torch.save(graph, path_pt)
+  
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = []
+            for entry in self.openlsd:
+                futures.append(executor.submit(load_adaptive_subdataset_pool, entry))
+        # for entry in self.openlsd:
+        #     # print("entry",entry)
+        #     design = entry["design_name"]
+        #     if design not in self.designs:
+        #         continue
+        #     recipes_pack = entry["design_recipes"]
+        #     label_int = self.designs.index(design)
+        #     for i in tqdm(range(self.recipes), desc=f"process at {design}"):
+        #         path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
+        #         if os.path.exists(path_pt):
+        #           continue
+        #         data = recipes_pack[self.logic][i]
+        #         circuit: Circuit = data["circuit"].values[0]
+        #         graph = circuit.to_torch_geometric()
+        #         x = circuit.get_node_features()
+        #         edge_index=circuit.get_edge_index()
+        #             # graph = circuit.to_torch_geometric()
+
+        #         tt = simulate_tt(circuit)
+        #         # print("++++++++++++")
+        #         y = torch.tensor(label_int, dtype=torch.long)         # label this graph
+        #         label = torch.tensor(tt,dtype=torch.float32)
+        #         forward_level,backward_level,forward_index,backward_index = circuit.get_level()
+        #         gate = circuit.get_gate()
+        #         x_feature = padding_feature_to_nochange(x, self.feature_size)
+        #         graph = PP_Data(x,x_feature,edge_index,y,label,forward_level,backward_level,forward_index,backward_index,gate,tt)
+
+        #             # padding feature to the same size
+        #         self.data_list.append(graph)
+        #         path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
+        #         torch.save(graph, path_pt)
   
 
     def extract_and_label_subdataset(self):
@@ -216,7 +271,31 @@ class Probability_prediction(Dataset):
 
           return dataset
 
-    
+
+
+    # @staticmethod
+    # def pool_process(self,i,recipes_pack,label_int,design):
+    #   data = recipes_pack[self.logic][i]
+    #   circuit: Circuit = data["circuit"].values[0]
+    #   graph = circuit.to_torch_geometric()
+    #   x = circuit.get_node_features()
+    #   edge_index=circuit.get_edge_index()
+    #       # graph = circuit.to_torch_geometric()
+    #   print(count)
+    #   count += 1
+    #   tt = simulate_tt(circuit)
+
+    #   y = torch.tensor(label_int, dtype=torch.long)         # label this graph
+    #   label = torch.tensor(tt,dtype=torch.float32)
+    #   forward_level,backward_level,forward_index,backward_index = circuit.get_level()
+    #   gate = circuit.get_gate()
+    #   x_feature = padding_feature_to_nochange(x, self.feature_size)
+    #   graph = PP_Data(x,x_feature,edge_index,y,label,forward_level,backward_level,forward_index,backward_index,gate,tt)
+    #       # padding feature to the same size
+    #   self.data_list.append(graph)
+    #   path_pt = os.path.join(self.processed_dir, f"{self.design_recipe_name(design, i)}.pt")
+    #   torch.save(graph, path_pt)
+        
     def num_classes(self):
         return self.count_classes
     
@@ -247,9 +326,20 @@ class Probability_prediction(Dataset):
             # print("label:", data.label.shape)
     
 if __name__ == "__main__":
-    folder:str = sys.argv[1]
-    recipe_size:int = sys.argv[2]
-    target:str = sys.argv[3]
-    curr_designs = ["i2c", "priority", "ss_pcm", "tv80"]
-    db = Probability_prediction(root_openlsd=folder, recipe_size=recipe_size, curr_designs=curr_designs, processed_dir=target)
+    folder:str = '/data/project_share/openlsd_1028'
+    recipes:int = 1000
+    target:str = 'data_pp'
+    designs = [
+        "ctrl",
+        "steppermotordrive",
+        "router",
+        "int2float",
+        "ss_pcm",
+        "usb_phy",
+        "sasc",
+        "cavlc",
+        "simple_spi",
+        "priority"
+    ]
+    db = Probability_prediction(root_openlsd=folder,processed_dir=target,designs=designs,logic='abc', recipes=recipes)
     db.print_data_list()
