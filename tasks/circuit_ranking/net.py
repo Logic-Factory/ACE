@@ -8,19 +8,36 @@ sys.path.append(proj_dir)
 import torch
 import torch.nn as nn
 from torch_geometric.data import Data
-from torch_geometric.nn import GCNConv, SAGEConv, global_mean_pool
+from torch_geometric.nn import GCNConv, SAGEConv, GINConv, global_mean_pool
+from torch_geometric.nn import SAGPooling
 
 class CircuitRankNet(nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, dim_input, dim_hidden):
         super(CircuitRankNet, self).__init__()
         self.activate = nn.Sigmoid()
-        self.conv1 = SAGEConv(num_features, 2*num_features)
-        self.conv2 = SAGEConv(2*num_features, 2*num_features)
+        
+        # # 定义 MLP 用于 GINConv
+        # self.mlp1 = nn.Sequential(
+        #     nn.Linear(dim_input, dim_hidden),
+        #     nn.ReLU(),
+        #     nn.Linear(dim_hidden, dim_hidden)
+        # )
+        # self.mlp2 = nn.Sequential(
+        #     nn.Linear(dim_hidden, dim_hidden),
+        #     nn.ReLU(),
+        #     nn.Linear(dim_hidden, dim_hidden)
+        # )        
+        # self.conv1 = GINConv(self.mlp1)
+        # self.conv2 = GINConv(self.mlp2)
+
+
+        self.conv1 = GCNConv(dim_input, dim_hidden)
+        self.conv2 = GCNConv(dim_hidden, dim_hidden)
         self.dropout = nn.Dropout(p=0.2)
         self.compare = nn.Sequential(
-            nn.Linear(4*num_features, 2*num_features),  # Combine and compress features
+            nn.Linear(2*dim_hidden, dim_hidden),  # Combine and compress features
             self.activate,
-            nn.Linear(2*num_features, 1)  # Final decision
+            nn.Linear(dim_hidden, 1)              # Final decision
         )
         
     def graph_embedding(self, data):

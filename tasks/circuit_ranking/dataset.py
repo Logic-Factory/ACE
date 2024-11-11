@@ -70,7 +70,7 @@ class RankingDataset(Dataset):
             self.load_processed_data()
         else:
             print("load openls-d file first")
-            self.openlsd:Dataset = OpenLS_Dataset(root=self.root_openlsd, designs=self.designs, logics=self.logics, recipes=self.recipes)
+            self.openlsd:Dataset = OpenLS_Dataset(root=self.root_openlsd, designs=self.designs, logics=self.logics)
             print("load the circuit ranking db from openls-d file")
             self.load_adaptive_subdataset()
 
@@ -93,6 +93,7 @@ class RankingDataset(Dataset):
             design = entry["design_name"]
             if design not in self.designs:
                 continue
+            print(f"processing {design}")
             recipes_pack = entry["design_recipes"]
             for i in range(self.recipes):
                 conbinations = list(itertools.combinations(self.logics, 2))
@@ -134,6 +135,7 @@ class RankingDataset(Dataset):
                         "logic_1": pairs_logic[1],
                         "graph_0": graph_0,
                         "graph_1": graph_1,
+                        "label": 0,
                     }
                     data_neg = {
                         "design": design,
@@ -142,31 +144,55 @@ class RankingDataset(Dataset):
                         "logic_1": pairs_logic[0],
                         "graph_0": graph_1,
                         "graph_1": graph_0,
+                        "label": 1,
                     }
                     self.data_list.append(data_pos)
                     self.data_list.append(data_neg)
-                    path_pt = os.path.join(self.processed_dir, f"{pair_name_pos}.pt")
-                    path_pt = os.path.join(self.processed_dir, f"{pair_name_neg}.pt")
-                    torch.save(data_pos, path_pt)
-                    torch.save(data_neg, path_pt)
+                    path_pt_1 = os.path.join(self.processed_dir, f"{pair_name_pos}.pt")
+                    path_pt_2 = os.path.join(self.processed_dir, f"{pair_name_neg}.pt")
+                    torch.save(data_pos, path_pt_1)
+                    torch.save(data_neg, path_pt_2)
     
     def split_train_test(self, train_ratio: float = 0.8) -> Tuple[List[Data], List[Data]]:
-        """Split the dataset into training and testing sets."""
-        train_size = int(train_ratio * len(self.data_list))
-        shuffled_indices = torch.randperm(len(self.data_list)).tolist()
-        train_indices = shuffled_indices[:train_size]
-        test_indices = shuffled_indices[train_size:]
-        train_dataset = [self.data_list[i] for i in train_indices]
-        test_dataset = [self.data_list[i] for i in test_indices]
+        """
+        Split the dataset into train and test sets by the designs.
+        """
+        design_dict = {}
+        for item in self.data_list:
+            design = item['design']
+            if design not in design_dict:
+                design_dict[design] = []
+            design_dict[design].append(item)
+        
+        train_dataset = []
+        test_dataset = []
+        
+        for design, items in design_dict.items():
+            num_items = len(items)
+            train_size = int(train_ratio * num_items)
+            shuffled_indices = torch.randperm(num_items).tolist()
+            
+            train_indices = shuffled_indices[:train_size]
+            test_indices = shuffled_indices[train_size:]
+            train_dataset.extend([items[i] for i in train_indices])
+            test_dataset.extend([items[i] for i in test_indices])
         return train_dataset, test_dataset
 
 if __name__ == "__main__":
     root_openlsd:str = sys.argv[1]
     processed_dir:str = sys.argv[2]
     recipes:int = sys.argv[3]
-    curr_logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
+    curr_logics = ["aig", "xag", "mig", "gtg"]
     curr_designs = [
         "ctrl",
-        "steppermotordrive"
+        "router",
+        "int2float",
+        "ss_pcm",
+        "usb_phy",
+        "sasc",
+        "cavlc",
+        "simple_spi",
+        "priority",
+        "i2c",
         ]
     db = RankingDataset(root_openlsd=root_openlsd, processed_dir=processed_dir, designs=curr_designs, logics=curr_logics, recipes=recipes)
