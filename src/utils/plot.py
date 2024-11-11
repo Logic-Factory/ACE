@@ -63,16 +63,40 @@ def plot_curve(lists, labels, title, x_label, y_label, save_path):
     
     x = range(len(lists[0]))
     for i, y in enumerate(lists):
-        axes.plot(x, y, color=colors[i % len(colors)], linestyle=style[i % len(style)], marker = markers[i % len(markers)], markevery=5, linewidth=1.5, alpha=0.8)
+        label = labels[i] if i < len(labels) else None
+        axes.plot(x, y, color=colors[i % len(colors)], linestyle=style[i % len(style)], label=label, marker = markers[i % len(markers)], markevery=5, linewidth=1.5, alpha=0.8)
     
     axes.set_xlabel(x_label)
     axes.set_ylabel(y_label)
     axes.set_title(title)
     if len(labels) > 1:
-        axes.legend(loc='upper right', fancybox = True, shadow = False, bbox_to_anchor=(1.05, 1), borderaxespad=0.)
+        # axes.legend(loc='upper right', fancybox = True, shadow = False, bbox_to_anchor=(1, 0.5), borderaxespad=0.)
+        axes.legend(fancybox = True, shadow = False, borderaxespad=0.)
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
+def plot_dual_curve(list0, list1, title, x_label, y0_label, y1_label, save_path):
+    plt.clf()
+    fig, ax1 = plt.subplots(figsize=(8, 6))
+
+    # Create the first axis for loss
+    ax1.plot(list0, color='tab:red', linestyle='-', marker='x', markersize=5, label=y0_label)
+    ax1.set_xlabel(x_label)
+    ax1.set_ylabel(y0_label, color='tab:red')
+    ax1.tick_params(axis='y', labelcolor='tab:red')
+
+    # Create a second axis for accuracy, sharing the same x-axis
+    ax2 = ax1.twinx()
+    line3, = ax2.plot(list1, color='tab:blue', linestyle='-', marker='x', markersize=5, label=y1_label)
+    ax2.set_ylabel(y1_label, color='tab:blue')
+    ax2.tick_params(axis='y', labelcolor='tab:blue')
+
+    # Title and legend
+    plt.title(title)
+
+    # Save the plot
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
 
 def plot_2d_dots(x_list, y_list, title, x_label, y_label, save_path):
     plt.clf()
