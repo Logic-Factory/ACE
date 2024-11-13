@@ -91,13 +91,17 @@ class Trainer(object):
             total_acc_test.append(acc_test)
             
             print(f'Epoch: {epoch:03d}, Loss: {loss_train:.4f} ({loss_test:.4f}), Acc: {acc_train:.4f} ({acc_test:.4f})')
+            
             plot_curve(lists= [total_loss_train], labels=[], title="train loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace, "loss_train.pdf"))
             plot_curve(lists= [total_acc_train], labels=[], title="train acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_train.pdf"))
             plot_curve(lists= [total_loss_test], labels=[], title="test loss curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace,"loss_test.pdf"))
             plot_curve(lists= [total_acc_test], labels=[], title="test acc curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc_test.pdf"))
+            plot_curve(lists= [total_acc_train, total_acc_test], labels=["train", "test"], title="Accuracy Curve", x_label="epoch", y_label="acc", save_path = os.path.join(self.workspace, "acc.pdf"))
+            plot_curve(lists= [total_loss_train, total_loss_test], labels=["train", "test"], title="Loss Curve", x_label="epoch", y_label="loss", save_path = os.path.join(self.workspace,"loss.pdf"))
             
         self.tsne_analysis(dataloader_train, os.path.join(self.workspace, "tsne_train.pdf"))
         self.tsne_analysis(dataloader_test, os.path.join(self.workspace, "tsne_test.pdf"))
+        torch.save(self.model.state_dict(), os.path.join(self.workspace, "model.pth"))
 
     def train(self, dataloader:DataLoader):
         self.model.train()
@@ -159,7 +163,9 @@ class Trainer(object):
         plt.clf()
         fig, ax = plt.subplots(figsize=(6, 6))
         scatter = ax.scatter(tsne_res[:, 0], tsne_res[:, 1], c=labels, cmap='tab20')
-        legend = ax.legend(*scatter.legend_elements(), title="Classes", loc = 'upper right', fancybox=True, shadow=False)
+        handles, labels = scatter.legend_elements()
+        unique = list(set(labels))
+        legend = ax.legend(handles, unique, title="Classes", loc = 'upper right', fancybox=True, shadow=False)
         ax.add_artist(legend)
         plt.savefig(output_path)
         plt.close()
@@ -168,9 +174,9 @@ if __name__ == '__main__':
     # config the args
     parser = argparse.ArgumentParser()
     parser.add_argument('--root_openlsd', type=str, required=True, help='the path of the datapath')
-    parser.add_argument('--recipe_size', type=int, default=50, help='the extracted recipe size for each design')
     parser.add_argument('--processed_dir', type=str, help='the dimenssion of the feature size for each node')
     parser.add_argument('--logic', type=str, default="abc", help='the logic type of the selected dataset')
+    parser.add_argument('--recipes', type=int, default=50, help='the extracted recipe size for each design')
     parser.add_argument('--dim_input', type=int, default=64, help='the dimenssion of the feature size for each node')
     parser.add_argument('--dim_hidden', type=int, default=128, help='the dimension of the hidden layer')
     parser.add_argument('--epoch_size', type=int, default=100, help='epoch size for training')
@@ -180,20 +186,28 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     curr_designs = [
-        "ctrl",
-        # "steppermotordrive",
         "router",
-        # "int2float",
-        "ss_pcm",
-        # "usb_phy",
-        "sasc",
+        "usb_phy",
+        "cavlc",
+        "adder",
+        "systemcdes",
+        "max",
+        "spi",
+        "wb_dma",
+        "des3_area",
+        "tv80",
+        "arbiter",
+        "mem_ctrl",
+        "square",
+        "aes",
+        "fpu",
         ]
     
     trainer = Trainer(root_openlsd=args.root_openlsd,
                       processed_dir=args.processed_dir,
                       designs=curr_designs,
                       logic=args.logic,
-                      recipes=args.recipe_size,
+                      recipes=args.recipes,
                       dim_input=args.dim_input,
                       dim_hidden=args.dim_hidden,
                       epoch_size=args.epoch_size,
