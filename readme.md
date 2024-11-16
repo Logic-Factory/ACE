@@ -1,10 +1,7 @@
-# ACE: AI Circuit Engine
+# ACE: AI Circuit Engine for Logic Synthesis
 
-```
-The ACE project provides a platform for machine learning tasks in logic synthesis.
-Firstly, the LogicFactory tool can generate the GraphML files of the Boolean circuits, including Boolean networks and ASIC/FPGA gate-level netlists.
-Then, the ACE can load the GraphML files into the ``Circuit'' class and generate the desired dataset for the related machine learning tasks.
-```
+The ACE project provides a platform for machine learning tasks in logic synthesis. \
+The mission of ACE is to provide a unified benchmark and framework for these tasks.
 
 ### Framework
 
@@ -47,7 +44,7 @@ Figure (b) shows the node correspondence between the original Boolean circuit, t
 The ``Circuit`` can be seen as the bridge between the original Boolean circuit and the AI-friendly torch_geometric graph. \
 We can also leverage the advantages of the torch_geometric graph to make more graph operations and analysis on ``Circuit''.
 
-### Adaptive Dataset Generation Framework
+### OpenLS-DGF: Adaptive Logic Synthesis Dataset Generation Framework
 
 <p align="center">
   <img src="imgs/dataset_framework.png" width="80%" alt="(a) UML Diagram">
@@ -57,7 +54,7 @@ We can also leverage the advantages of the torch_geometric graph to make more gr
 </p>
 
 We also designed one adaptive dataset generation framework, which can generate one generic dataset for multiple downstream machine-learning tasks in logic synthesis. \
-The details are discussed at [OpenLS-D Folder](OpenLS-D/readme.md).
+The details are discussed at [OpenLS-DDGF Folder](OpenLS-DGF/readme.md).
 
 ### Tasks
 
