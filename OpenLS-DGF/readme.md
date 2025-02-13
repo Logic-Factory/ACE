@@ -68,7 +68,7 @@ The different logic-related files are divided into different PyTorch files with 
 (1) **Tools Preparation**
 
 - LogicFactory: \
-      repo: [https://github.com/LogicFactory/LogicFactory](https://github.com/LogicFactory/LogicFactory)
+      repo: [https://github.com/Logic-Factory/LogicFactory](https://github.com/Logic-Factory/LogicFactory)
 
       The LogicFactory is an open-source logic synthesis platform, which integrates the common logic synthesis tool to allow using commands across integrated tools. In this way, it combines the strengths of each tool to create a powerful toolchain for logic synthesis.
 
