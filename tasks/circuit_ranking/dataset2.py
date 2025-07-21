@@ -4,7 +4,7 @@ current_dir = os.path.split(os.path.abspath(__file__))[0]
 proj_dir = current_dir.rsplit('/', 2)[0]
 sys.path.append(proj_dir)
 
-
+import random
 import pandas as pd
 from glob import glob
 import torch
@@ -21,7 +21,7 @@ from src.circuit.circuit import Circuit
 from src.dataset.dataset import OpenLS_Dataset
 from src.utils.numeric import float_approximately_equal
 
-class RankingDataset(Dataset):
+class RankingDataset2(Dataset):
     def __init__(self, root_openlsd:str, processed_dir:str, designs:List[str], logics:List[str], recipes:int):
         """_summary_
         
@@ -32,7 +32,7 @@ class RankingDataset(Dataset):
             logic (str): logic type
             recipes: (int): recipe size
         """
-        super(RankingDataset, self).__init__()
+        super(RankingDataset2, self).__init__()
         self.root_openlsd:str = os.path.abspath(root_openlsd)
         self.processed_dir:str = os.path.abspath(processed_dir) # store the processed data_list
         self.designs:List[str] = designs
@@ -58,8 +58,7 @@ class RankingDataset(Dataset):
     def processed_data_list(self):
         pattern = os.path.join(self.processed_dir, f'*.pt')
         processed_files = [file for file in glob(pattern, recursive=True)]
-        filtered_files = [file for file in processed_files if any(file.split(os.sep)[-1].startswith(design) for design in self.designs)]
-        return filtered_files
+        return processed_files
     
     @property
     def processed_data_exist(self):
@@ -77,7 +76,6 @@ class RankingDataset(Dataset):
 
     def load_processed_data(self):
         processed_data = self.processed_data_list
-        # print(processed_data)
         def load_processed_one_design_recipe(one_design_recipe):
             data = torch.load(one_design_recipe, weights_only=False)
             self.data_list.append(data)        
@@ -95,9 +93,8 @@ class RankingDataset(Dataset):
             design = entry["design_name"]
             if design not in self.designs:
                 continue
-            print(f"processing {design}")
             recipes_pack = entry["design_recipes"]
-            for i in range(self.recipes):
+            for i in tqdm(range(self.recipes), desc=f"processing {design}"):
                 conbinations = list(itertools.combinations(self.logics, 2))
                 for pairs_logic in conbinations:
                     select0 = True  # flag to select the circuit
@@ -122,35 +119,11 @@ class RankingDataset(Dataset):
                         if area_0 > area_1:
                             select0 = False
 
-                    # if select0:
-                    #     graph_0.y = torch.tensor(1, dtype=torch.float)
-                    #     graph_1.y = torch.tensor(0, dtype=torch.float)
-                    # else:
-                    #     graph_0.y = torch.tensor(0, dtype=torch.float)
-                    #     graph_1.y = torch.tensor(1, dtype=torch.float)
-                    # pair_name_pos = self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "pos")
-                    # pair_name_neg = self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "neg")
-                    # data_pos = {
-                    #     "design": design,
-                    #     "recipe": i,
-                    #     "logic_0": pairs_logic[0],
-                    #     "logic_1": pairs_logic[1],
-                    #     "graph_0": graph_0,
-                    #     "graph_1": graph_1,
-                    #     "label": 0,
-                    # }
-                    # data_neg = {
-                    #     "design": design,
-                    #     "recipe": i,
-                    #     "logic_0": pairs_logic[1],
-                    #     "logic_1": pairs_logic[0],
-                    #     "graph_0": graph_1,
-                    #     "graph_1": graph_0,
-                    #     "label": 1,
-                    # }
-                    
+                    # pos: graph0 <= graph1, select0, label =0
+                    # neg: graph0 >= graph1, select1, label =1
                     pair_name_pos = self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "pos")
                     pair_name_neg = self.design_recipe_logic_pair_name(design, i, pairs_logic[0], pairs_logic[1], "neg")
+                    
                     if select0:
                         data_pos = {
                             "design": design,
@@ -159,6 +132,10 @@ class RankingDataset(Dataset):
                             "logic_1": pairs_logic[1],
                             "graph_0": graph_0,
                             "graph_1": graph_1,
+                            "area_0": area_0,
+                            "area_1": area_1,
+                            "timing_0": timing_0,
+                            "timing_1": timing_1,
                             "label": 0,
                         }
                         data_neg = {
@@ -168,6 +145,10 @@ class RankingDataset(Dataset):
                             "logic_1": pairs_logic[0],
                             "graph_0": graph_1,
                             "graph_1": graph_0,
+                            "area_0": area_1,
+                            "area_1": area_0,
+                            "timing_0": timing_1,
+                            "timing_1": timing_0,
                             "label": 1,
                         }
                     else:
@@ -178,6 +159,10 @@ class RankingDataset(Dataset):
                             "logic_1": pairs_logic[0],
                             "graph_0": graph_1,
                             "graph_1": graph_0,
+                            "area_0": area_1,
+                            "area_1": area_0,
+                            "timing_0": timing_1,
+                            "timing_1": timing_0,
                             "label": 0,
                         }
                         data_neg = {
@@ -187,9 +172,13 @@ class RankingDataset(Dataset):
                             "logic_1": pairs_logic[1],
                             "graph_0": graph_0,
                             "graph_1": graph_1,
+                            "area_0": area_0,
+                            "area_1": area_1,
+                            "timing_0": timing_0,
+                            "timing_1": timing_1,
                             "label": 1,
                         }
-                    
+
                     self.data_list.append(data_pos)
                     self.data_list.append(data_neg)
                     path_pt_1 = os.path.join(self.processed_dir, f"{pair_name_pos}.pt")
@@ -197,36 +186,70 @@ class RankingDataset(Dataset):
                     torch.save(data_pos, path_pt_1)
                     torch.save(data_neg, path_pt_2)
     
-    def split_train_test(self, train_ratio: float = 0.8) -> Tuple[List[Data], List[Data]]:
+    def split_train_test(self, train_ratio: float = 0.8):
         """
         Split the dataset into train and test sets by the designs.
         """
-        design_dict = {}
-        for item in self.data_list:
-            design = item['design']
-            if design not in design_dict:
-                design_dict[design] = []
-            design_dict[design].append(item)
-        
+        test_design_recipes = {}     # used for test the improvements
         train_dataset = []
         test_dataset = []
         
-        for design, items in design_dict.items():
-            num_items = len(items)
-            train_size = int(train_ratio * num_items)
-            shuffled_indices = torch.randperm(num_items).tolist()
+        # split the recipes for train and test by the self.recipes and train_ratio
+        indices = list(range(self.recipes))
+        random.shuffle(indices)
+        split_index = int(train_ratio * self.recipes)
+        
+        train_indices = indices[:split_index]
+        test_indices = indices[split_index:]
+        
+        # collect data for the train and test sets
+        for data in self.data_list:
+            design = data['design']
+            recipe = data['recipe']
+            if recipe in train_indices:
+                train_dataset.append(data)
+            elif recipe in test_indices:
+                test_dataset.append(data)
+                
+                if design not in test_design_recipes:
+                    test_design_recipes[design] = {}
+                
+                if recipe not in test_design_recipes[design]:
+                    test_design_recipes[design][recipe] = []
+                
+                test_design_recipes[design][recipe].append(data)
+            else:   # not processed recipes
+                continue
             
-            train_indices = shuffled_indices[:train_size]
-            test_indices = shuffled_indices[train_size:]
-            train_dataset.extend([items[i] for i in train_indices])
-            test_dataset.extend([items[i] for i in test_indices])
-        return train_dataset, test_dataset
+        return train_dataset, test_dataset, test_design_recipes
+        
+        # design_dict = {}
+        # for data in self.data_list:
+        #     design = data['design']
+        #     recipe = data['recipe']
+        #     if design not in design_dict:
+        #         design_dict[design] = []
+        #     design_dict[design].append(data)
+        
+        # train_dataset = []
+        # test_dataset = []
+        
+        # for design, data in design_dict.items():
+        #     num_items = len(data)
+        #     train_size = int(train_ratio * num_items)
+        #     shuffled_indices = torch.randperm(num_items).tolist()
+            
+        #     train_indices = shuffled_indices[:train_size]
+        #     test_indices = shuffled_indices[train_size:]
+        #     train_dataset.extend([data[i] for i in train_indices])
+        #     test_dataset.extend([data[i] for i in test_indices])
+        # return train_dataset, test_dataset
 
 if __name__ == "__main__":
     root_openlsd:str = sys.argv[1]
     processed_dir:str = sys.argv[2]
     recipes:int = sys.argv[3]
-    curr_logics = ["aig", "xag", "mig", "gtg"]
+    curr_logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
     curr_designs = [
         "ctrl",
         "router",
@@ -239,4 +262,11 @@ if __name__ == "__main__":
         "priority",
         "i2c",
         ]
-    db = RankingDataset(root_openlsd=root_openlsd, processed_dir=processed_dir, designs=curr_designs, logics=curr_logics, recipes=recipes)
+    db = RankingDataset2(root_openlsd=root_openlsd, processed_dir=processed_dir, designs=curr_designs, logics=curr_logics, recipes=recipes)
+    dataset_train, dataset_test, test_desgin_recipes = db.split_train_test(0.7)
+    print("train dataset")
+    print(dataset_train)
+    print("test dataset")
+    print(dataset_test)
+    print("test recipes")
+    print(test_desgin_recipes)

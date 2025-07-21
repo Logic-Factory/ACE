@@ -164,13 +164,13 @@ class OpenLS_Dataset(Dataset):
                 torch.save(logic_circuit_list, path_logic_pt)
                 recipe_list[logic] = logic_circuit_list
         
-        data = {
-            "design_name": desgin,
-            "design_gtech": src_gtech,
-            "design_aig": src_aig,
-            "design_recipes": recipe_list
-        }
-        self.data_list.append( data )
+        # data = {
+        #     "design_name": desgin,
+        #     "design_gtech": src_gtech,
+        #     "design_aig": src_aig,
+        #     "design_recipes": recipe_list
+        # }
+        # self.data_list.append( data )
 
     def load_one_logic(self, folder, logic, design, index):
         path_one_design = os.path.join(folder, design)
@@ -240,53 +240,54 @@ class OpenLS_Dataset(Dataset):
 if __name__ == "__main__":
     folder:str = sys.argv[1]
     recipe_size:int = sys.argv[2]
-    logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
+    # logics = ["abc", "aig", "oig", "xag", "primary", "mig", "gtg"]
+    logics = ["aig", "oig", "xag", "primary", "mig", "gtg"]
     designs = [
-        "ctrl",
-        "steppermotordrive",
-        "router",
-        "int2float",
-        "ss_pcm",
-        "usb_phy",
-        "sasc",
-        "cavlc",
-        "simple_spi",
-        "priority",
-        "adder",
-        "i2c",
-        "systemcdes",
-        "max",
-        "bar",
-        "spi",
-        "fir",
-        "wb_dma",
-        "des3_area",
-        "sin",
-        "iir",
-        "tv80",
-        "ac97_ctrl",
-        "arbiter",
-        "systemcaes",
-        "voter",
-        "usb_funct",
-        "sha256",
-        "mem_ctrl",
-        "dynamic_node",
-        "square",
-        "sqrt",
-        "multiplier",
-        "aes",
-        "fpu",
-        "log2",
-        "aes_secworks",
-        "aes_xcrypt",
-        "wb_conmax",
-        "tinyRocket",
-        "div",
-        "ethernet",
-        "bp_be",
-        "picosoc",
-        "vga_lcd",
+        # "ctrl",
+        # "steppermotordrive",
+        # "router",
+        # "int2float",
+        # "ss_pcm",
+        # "usb_phy",
+        # "sasc",
+        # "cavlc",
+        # "simple_spi",
+        # "priority",
+        # "adder",
+        # "i2c",
+        # "systemcdes",
+        # "max",
+        # "bar",
+        # "spi",
+        # "fir",
+        # "wb_dma",
+        # "des3_area",
+        # "sin",
+        # "iir",
+        # "tv80",
+        # "ac97_ctrl",
+        # "arbiter",
+        # "systemcaes",
+        # "voter",
+        # "usb_funct",
+        # "sha256",
+        # "mem_ctrl",
+        # "dynamic_node",
+        # "square",
+        # "sqrt",
+        # "multiplier",
+        # "aes",
+        # "fpu",
+        # "log2",
+        # "aes_secworks",
+        # "aes_xcrypt",
+        # "wb_conmax",
+        # "tinyRocket",
+        # "div",
+        # "ethernet",
+        # "bp_be",
+        # "picosoc",
+        # "vga_lcd",
         "jpeg"
     ]
     db = OpenLS_Dataset(folder, designs, logics, recipe_size)

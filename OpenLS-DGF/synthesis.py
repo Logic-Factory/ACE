@@ -298,7 +298,7 @@ class Synthesis(object):
         else:                               # graphml存在，但是gtech没有，gtech和graphml都重新生成
             script += "anchor -set yosys; read_aiger -file {0}; hierarchy -auto-top; \
                     rename -top {1}; techmap; abc -exe {2} -genlib {3}; \
-                    write_verilog {4}; ".format(desgin, 
+                    write_verilog -file {4}; ".format(desgin, 
                                                     self.top_model_name,
                                                     self.params.tool_abc(),
                                                     self.params.lib_gtech_genlib(),

@@ -42,8 +42,21 @@ tex_fonts = {
 plt.rcParams.update(tex_fonts)
 plt.rcParams['figure.dpi'] = 600
 
-# style={ 0:'-', 1: '-', 2:'-.', 3:'--',  4:':', 5:'-.', 6:'--', 7: ':'}
-style={ 0:'--', 1: '-', 3:':', 4:'dashdot',  2:'-', -1:'-'}
+style={ 0:'-', 1: '-', 2:'-.', 3:'--',  4:':', 5:'-.', 6:'--', 7: ':'}
+# style={ 0:'--', 1: '-', 3:':', 4:'dashdot',  2:'-', -1:'-'}
+# color={ 0:'C2', 1: 'C3', 3: 'C0', 4:'C1', 5:'C4', 2:'C5'}
+
+# linestyle_tuple = ['-', ':', '-.', '--', '-.','-']
+# markers = [
+#     "*", "+", ".", "x", "d", "p", "|",
+#     "o", "s", "^", "<", "v", ">",
+#     "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+#     "c", "m", "y", "k", "r", "g", "b",
+#     "-", "--", ":", ".-.",
+#     "none",
+# ]
+
+# style={ 0:'--', 1: '-', 2:':', 3:'dashdot', -1:'-'}
 color={ 0:'C2', 1: 'C3', 3: 'C0', 4:'C1', 5:'C4', 2:'C5'}
 
 linestyle_tuple = ['-', ':', '-.', '--', '-.','-']
@@ -74,6 +87,31 @@ def plot_curve(lists, labels, title, x_label, y_label, save_path):
         axes.legend(fancybox = True, shadow = False, borderaxespad=0.)
     fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
     plt.close()
+    
+
+def plot_curve2(lists, labels, title, x_label, y_label, save_path, isLegend=False):
+    plt.clf()
+    fig, axes = plt.subplots(1, 1, sharex=False, sharey=False, figsize=(6, 4))
+    axes.grid(False)
+    
+    x = range(len(lists[0]))
+    for i, y in enumerate(lists):
+        # print(f"Plotting series {i}:")
+        # print(f"Plotting mode series {i % len(colors)}:")
+        # print(f"Color index: {colors[i % len(colors)]}")
+        # print(f"Style index: {style[i % len(style)]}")
+        # print(f"Marker index: {markers[i % len(markers)]}")
+        axes.plot(x, y, label = labels[i], color=colors[i % len(colors)], linestyle=style[i % len(style)], marker = markers[i % len(markers)], markevery=2, linewidth=1.5, alpha=0.8)
+    
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.set_title(title)
+    if isLegend:
+        axes.legend(loc='lower left', fancybox = True, shadow = False, bbox_to_anchor=(1, 0.5), borderaxespad=0.)
+        # axes.legend(loc='best', fancybox=True, shadow=False, borderaxespad=0.)
+    fig.savefig(save_path, dpi=600, bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
 
 def plot_dual_curve(list0, list1, title, x_label, y0_label, y1_label, save_path):
     plt.clf()

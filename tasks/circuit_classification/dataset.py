@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 
 from typing import List, Tuple
 from tqdm import tqdm
+from torch_geometric.utils import from_networkx, to_undirected
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from src.circuit.circuit import Circuit
@@ -114,15 +115,54 @@ class ClassificationDataset(Dataset):
     
     def num_classes(self):
         return len(self.designs)
-    
-    def split_train_test(self, train_ratio: float = 0.8) -> Tuple[List[Data], List[Data]]:
-        """Split the dataset into training and testing sets."""
-        train_size = int(train_ratio * len(self.data_list))
-        shuffled_indices = torch.randperm(len(self.data_list)).tolist()
-        train_indices = shuffled_indices[:train_size]
-        test_indices = shuffled_indices[train_size:]
-        train_dataset = [self.data_list[i] for i in train_indices]
-        test_dataset = [self.data_list[i] for i in test_indices]
+
+    def split_train_test(self, designs, train_ratio: float = 0.8, is_directed = True):
+        train_dataset = []
+        test_dataset = []
+        
+        # relable the dataset
+        design_to_label = {design: i for i, design in enumerate( designs )}
+        # collect all the data with explicit label
+        label_datas_dict = {}
+        for data in self.data_list:
+            label = data.y.item()
+            if label not in label_datas_dict:
+                label_datas_dict[label] = []
+            label_datas_dict[label].append(data)
+        
+        for design in designs:
+            # label = self.label_dict[design]
+            label = design_to_label[design]
+            datas = label_datas_dict[label]
+
+            for data in datas:
+                data.y = torch.tensor([label], dtype=torch.long)
+                
+                if is_directed is False:
+                    data.edge_index = to_undirected(data.edge_index)
+            
+            train_size = int(len(datas) * train_ratio)
+            train = datas[:train_size]
+            test = datas[train_size:]
+            train_dataset.extend(train)
+            test_dataset.extend(test)
+        
+        # print the count of each label for the train and test dataset
+        train_label_count = {}
+        test_label_count = {}
+        for data in train_dataset:
+            label = data.y.item()
+            if label not in train_label_count:
+                train_label_count[label] = 0
+            train_label_count[label] += 1
+        for data in test_dataset:
+            label = data.y.item()
+            if label not in test_label_count:
+                test_label_count[label] = 0
+            test_label_count[label] += 1
+        print("train label count:", train_label_count)
+        print("test label count:", test_label_count)
+        
         return train_dataset, test_dataset
 
 if __name__ == "__main__":
@@ -130,12 +170,20 @@ if __name__ == "__main__":
     recipe_size:int = sys.argv[2]
     target:str = sys.argv[3]
     curr_designs = [
-        "ctrl",
-        "steppermotordrive",
         "router",
-        "int2float",
-        "ss_pcm",
         "usb_phy",
-        "sasc",
+        "cavlc",
+        "adder",
+        "systemcdes",
+        "max",
+        "spi",
+        "wb_dma",
+        "des3_area",
+        "tv80",
+        "arbiter",
+        "mem_ctrl",
+        "square",
+        "aes",
+        "fpu",
         ]
     db = ClassificationDataset(root_openlsd=folder, recipe_size=recipe_size, curr_designs=curr_designs, processed_dir=target, logic="abc")
